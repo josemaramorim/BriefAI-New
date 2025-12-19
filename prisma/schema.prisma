@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id      String  @id @default(cuid())
+  name    String
+  users   User[]
+  templates Template[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String?
+  role     String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId String
+}
+
+model Template {
+  id         String   @id @default(cuid())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  name       String
+  description String?
+  published  Boolean  @default(false)
+  versions   TemplateVersion[]
+  blocks     Block[]
+  createdAt  DateTime @default(now())
+}
+
+model TemplateVersion {
+  id         String  @id @default(cuid())
+  template   Template @relation(fields: [templateId], references: [id])
+  templateId String
+  data       Json
+  createdAt  DateTime @default(now())
+}
+
+model Block {
+  id         String @id @default(cuid())
+  template   Template @relation(fields: [templateId], references: [id])
+  templateId String
+  title      String
+  order      Int @default(0)
+  parentId   String?
+  questions  Question[]
+}
+
+model Question {
+  id        String @id @default(cuid())
+  block     Block @relation(fields: [blockId], references: [id])
+  blockId   String
+  text      String
+  type      String
+  required  Boolean @default(false)
+}
+
+model Rule {
+  id         String @id @default(cuid())
+  template   Template @relation(fields: [templateId], references: [id])
+  templateId String
+  expression String
+  action     String
+}
+
+model BriefInstance {
+  id         String @id @default(cuid())
+  templateId String
+  tenantId   String
+  state      String
+  metadata   Json?
+  responses  Response[]
+  createdAt  DateTime @default(now())
+}
+
+model Response {
+  id           String @id @default(cuid())
+  briefId      String
+  questionText String
+  value        Json
+}
+
+model AuditLog {
+  id        String @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+}
