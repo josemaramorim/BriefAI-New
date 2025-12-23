@@ -1,0 +1,24 @@
+{
+    "errors": {
+        "emailPasswordRequired": "Email and password are required",
+        "emailPasswordTenantRequired": "Email, password and tenantId are required",
+        "invalidCredentials": "Invalid credentials",
+        "userAlreadyExists": "User already exists",
+        "templateNotFound": "Template not found",
+        "tenantIdRequired": "tenantId required (body or x-tenant-id header)",
+        "unauthorized": "Unauthorized",
+        "missingAuthHeader": "Missing authorization header",
+        "invalidAuthHeader": "Invalid authorization header",
+        "invalidToken": "Invalid token",
+        "notAuthenticated": "Not authenticated",
+        "forbidden": "Forbidden",
+        "internalError": "Internal server error"
+    },
+    "success": {
+        "userCreated": "User created successfully",
+        "templateCreated": "Template created successfully",
+        "templateUpdated": "Template updated successfully",
+        "templatePublished": "Template published successfully",
+        "seedCompleted": "Seed completed successfully"
+    }
+}

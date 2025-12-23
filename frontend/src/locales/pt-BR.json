@@ -1,0 +1,163 @@
+{
+    "app": {
+        "title": "BriefAI",
+        "subtitle": "Template Builder"
+    },
+    "auth": {
+        "login": "Entrar",
+        "logout": "Sair",
+        "email": "Email",
+        "password": "Senha",
+        "loginTitle": "Faça login para continuar",
+        "invalidCredentials": "Email ou senha inválidos",
+        "loggingIn": "Entrando...",
+        "welcome": "Bem-vindo"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "templates": "Templates",
+        "newTemplate": "Novo Template"
+    },
+    "dashboard": {
+        "welcome": "Bem-vindo ao seu painel de templates.",
+        "totalTemplates": "Total de Templates",
+        "publishedTemplates": "Publicados",
+        "draftTemplates": "Rascunhos",
+        "recentActivity": "Atividade Recente",
+        "quickActions": "Ações Rápidas"
+    },
+    "templates": {
+        "title": "Templates",
+        "subtitle": "Gerencie seus templates de briefing",
+        "newTemplate": "Novo Template",
+        "noTemplates": "Nenhum template",
+        "noTemplatesDescription": "Comece criando um novo template de briefing.",
+        "createTemplate": "Criar Template",
+        "viewDetails": "Ver detalhes",
+        "published": "Publicado",
+        "draft": "Rascunho",
+        "loading": "Carregando templates...",
+        "copyLink": "Copiar Link",
+        "viewResults": "Ver Resultados",
+        "linkCopied": "Link Copiado!",
+        "linkCopiedDescription": "O link do briefing foi copiado para sua área de transferência."
+        ,
+        "allowDraftResponses": "Permite respostas em rascunho"
+    },
+    "templateBuilder": {
+        "newTemplate": "Novo Template",
+        "editTemplate": "Editar Template",
+        "save": "Salvar",
+        "saving": "Salvando...",
+        "publish": "Publicar",
+        "templateInfo": "Informações do Template",
+        "name": "Nome",
+        "namePlaceholder": "Ex: Template Lançamento Produto SaaS",
+        "description": "Descrição",
+        "descriptionPlaceholder": "Descreva o propósito deste template...",
+        "blocksAndQuestions": "Blocos e Perguntas",
+        "addBlock": "Adicionar Bloco",
+        "noBlocks": "Nenhum bloco adicionado. Clique em \"Adicionar Bloco\" para começar.",
+        "conditionalRules": "Regras Condicionais",
+        "rulesDescription": "Defina regras para ativar/desativar blocos ou pular perguntas",
+        "addRule": "Adicionar Regra",
+        "noRules": "Nenhuma regra definida.",
+        "nameRequired": "Nome do template é obrigatório",
+        "saveSuccess": "Template salvo com sucesso!",
+        "saveError": "Erro ao salvar template",
+        "createSuccess": "Template criado com sucesso!",
+        "publishConfirm": "Tem certeza que deseja publicar este template? Esta ação criará uma versão imutável.",
+        "publishSuccess": "Template publicado com sucesso!",
+        "publishError": "Erro ao publicar template",
+        "saveBeforePublish": "Salve o template antes de publicar",
+        "loadingTemplate": "Carregando template...",
+        "loadError": "Erro ao carregar template",
+        "openedForEdit": "Template aberto para edição. O status voltou para Rascunho.",
+        "openForEditConfirm": "Deseja abrir este template para edição? Ele voltará ao estado de Rascunho e esta ação será auditada.",
+        "unlockEdit": "Abrir para Edição"
+        ,
+        "allowDraftResponses": "Permitir respostas em rascunho",
+        "allowDraftResponsesDesc": "Quando ativado, iniciar um briefing criará uma snapshot do template para vincular as respostas a uma versão estável."
+    },
+    "block": {
+        "title": "Título do Bloco",
+        "titlePlaceholder": "Ex: Contexto, Modelo de Negócio...",
+        "description": "Objetivo/Descrição do Bloco",
+        "descriptionPlaceholder": "Descreva o objetivo deste bloco...",
+        "remove": "Remover bloco",
+        "addQuestion": "Adicionar Pergunta"
+    },
+    "question": {
+        "placeholder": "Pergunta",
+        "textPlaceholder": "Texto da Pergunta",
+        "helpText": "Texto de ajuda (Placeholder)",
+        "required": "Obrigatória",
+        "options": "Opções de Resposta",
+        "option": "Opção",
+        "addOption": "Adicionar Opção",
+        "remove": "Remover pergunta",
+        "types": {
+            "text": "Texto Curto",
+            "textarea": "Texto Longo",
+            "number": "Número",
+            "select": "Seleção Única",
+            "multiselect": "Seleção Múltipla"
+        }
+    },
+    "rule": {
+        "title": "Regra",
+        "condition": "Condição (JSON)",
+        "conditionPlaceholder": "{\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Assinatura\"}",
+        "conditionExample": "Exemplo: {\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Assinatura\"}",
+        "action": "Ação (JSON)",
+        "actionPlaceholder": "{\"type\": \"activate_block\", \"blockId\": \"B2\"}",
+        "actionTypes": "Tipos: activate_block, skip_question, set_metadata",
+        "remove": "Remover regra"
+    },
+    "common": {
+        "back": "Voltar",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "delete": "Excluir",
+        "edit": "Editar",
+        "loading": "Carregando...",
+        "error": "Erro",
+        "success": "Sucesso"
+    },
+    "filler": {
+        "welcome": {
+            "title": "Briefing do Projeto",
+            "description": "Coleta detalhada de dados técnicos, necessidades funcionais e desejos estéticos para projetos de casas de alto padrão.",
+            "nameLabel": "Como podemos chamar você?",
+            "namePlaceholder": "Seu nome completo",
+            "emailLabel": "Qual seu melhor e-mail?",
+            "emailPlaceholder": "seu@email.com",
+            "startButton": "Começar Briefing",
+            "safeAndPrivate": "Seguro & Privado",
+            "personalized": "Briefing Personalizado",
+            "processing": "Processando..."
+        },
+        "header": {
+            "respondingAs": "Respondendo como:",
+            "progress": "Progresso"
+        },
+        "filling": {
+            "authorized": "Acesso Autorizado",
+            "ready": "Tudo pronto para começarmos! Clique abaixo para carregar as perguntas do seu briefing.",
+            "startQuestions": "Iniciar Perguntas",
+            "preparing": "Preparando suas perguntas...",
+            "back": "Voltar",
+            "continue": "Continuar",
+            "finish": "Finalizar Briefing"
+        },
+        "completed": {
+            "title": "Briefing Concluído!",
+            "description": "Obrigado, {{name}}! Suas respostas foram enviadas com sucesso e agora o profissional já pode começar a trabalhar no seu projeto.",
+            "notified": "Você será notificado sobre os próximos passos."
+        },
+        "footer": {
+            "management": "Gestão de Briefing Profissional",
+            "exclusive": "Experiência Exclusiva"
+        }
+    }
+}

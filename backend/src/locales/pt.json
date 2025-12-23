@@ -1,0 +1,11 @@
+{
+	"success": {
+		"templateCreated": "success.templateCreated",
+		"templatePublished": "success.templatePublished",
+		"templateReverted": "success.templateReverted"
+	},
+	"errors": {
+		"templateNotFound": "errors.templateNotFound",
+		"internalError": "errors.internalError"
+	}
+}

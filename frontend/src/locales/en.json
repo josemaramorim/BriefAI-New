@@ -1,0 +1,153 @@
+{
+    "app": {
+        "title": "BriefAI",
+        "subtitle": "Template Builder"
+    },
+    "auth": {
+        "login": "Login",
+        "logout": "Logout",
+        "email": "Email",
+        "password": "Password",
+        "loginTitle": "Login to continue",
+        "invalidCredentials": "Invalid email or password",
+        "loggingIn": "Logging in...",
+        "welcome": "Welcome"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "templates": "Templates",
+        "newTemplate": "New Template"
+    },
+    "templates": {
+        "title": "Templates",
+        "subtitle": "Manage your briefing templates",
+        "newTemplate": "New Template",
+        "noTemplates": "No templates",
+        "noTemplatesDescription": "Start by creating a new briefing template.",
+        "createTemplate": "Create Template",
+        "viewDetails": "View details",
+        "loading": "Loading templates...",
+        "copyLink": "Copy Link",
+        "viewResults": "View Results",
+        "linkCopied": "Link Copied!",
+        "linkCopiedDescription": "The briefing link has been copied to your clipboard."
+        ,
+        "allowDraftResponses": "Allow draft responses"
+    },
+    "templateBuilder": {
+        "newTemplate": "New Template",
+        "editTemplate": "Edit Template",
+        "save": "Save",
+        "saving": "Saving...",
+        "publish": "Publish",
+        "templateInfo": "Template Information",
+        "name": "Name",
+        "namePlaceholder": "E.g.: SaaS Product Launch Template",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe the purpose of this template...",
+        "blocksAndQuestions": "Blocks and Questions",
+        "addBlock": "Add Block",
+        "noBlocks": "No blocks added. Click \"Add Block\" to start.",
+        "conditionalRules": "Conditional Rules",
+        "rulesDescription": "Define rules to activate/deactivate blocks or skip questions",
+        "addRule": "Add Rule",
+        "noRules": "No rules defined.",
+        "nameRequired": "Template name is required",
+        "saveSuccess": "Template saved successfully!",
+        "saveError": "Error saving template",
+        "createSuccess": "Template created successfully!",
+        "publishConfirm": "Are you sure you want to publish this template? This action will create an immutable version.",
+        "publishSuccess": "Template published successfully!",
+        "publishError": "Error publishing template",
+        "saveBeforePublish": "Save the template before publishing",
+        "loadingTemplate": "Loading template...",
+        "loadError": "Error loading template",
+        "openedForEdit": "Template opened for editing. Status changed back to Draft.",
+        "openForEditConfirm": "Do you want to open this template for editing? It will return to Draft state and this action will be audited.",
+        "unlockEdit": "Open for Editing"
+        ,
+        "allowDraftResponses": "Allow draft responses",
+        "allowDraftResponsesDesc": "When enabled, starting a brief will snapshot the template so responses are tied to a stable version."
+    },
+    "block": {
+        "title": "Block Title",
+        "titlePlaceholder": "Ex: Context, Business Model...",
+        "description": "Block Objective/Description",
+        "descriptionPlaceholder": "Describe the objective of this block...",
+        "remove": "Remove block",
+        "addQuestion": "Add Question"
+    },
+    "question": {
+        "placeholder": "Question",
+        "textPlaceholder": "Question Text",
+        "helpText": "Help Text (Placeholder)",
+        "required": "Required",
+        "options": "Response Options",
+        "option": "Option",
+        "addOption": "Add Option",
+        "remove": "Remove question",
+        "types": {
+            "text": "Short Text",
+            "textarea": "Long Text",
+            "number": "Number",
+            "select": "Single Select",
+            "multiselect": "Multiple Select"
+        }
+    },
+    "rule": {
+        "title": "Rule",
+        "condition": "Condition (JSON)",
+        "conditionPlaceholder": "{\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Subscription\"}",
+        "conditionExample": "Example: {\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Subscription\"}",
+        "action": "Action (JSON)",
+        "actionPlaceholder": "{\"type\": \"activate_block\", \"blockId\": \"B2\"}",
+        "actionTypes": "Types: activate_block, skip_question, set_metadata",
+        "remove": "Remove rule"
+    },
+    "common": {
+        "back": "Back",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "edit": "Edit",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success"
+    },
+    "filler": {
+        "welcome": {
+            "title": "Project Briefing",
+            "description": "Detailed collection of technical data, functional needs, and aesthetic desires for high-end house projects.",
+            "nameLabel": "What can we call you?",
+            "namePlaceholder": "Your full name",
+            "emailLabel": "What's your best email?",
+            "emailPlaceholder": "your@email.com",
+            "startButton": "Start Briefing",
+            "safeAndPrivate": "Safe & Private",
+            "personalized": "Personalized Briefing",
+            "processing": "Processing..."
+        },
+        "header": {
+            "respondingAs": "Responding as:",
+            "progress": "Progress"
+        },
+        "filling": {
+            "authorized": "Access Authorized",
+            "ready": "Everything is ready to start! Click below to load your briefing questions.",
+            "startQuestions": "Start Questions",
+            "preparing": "Preparing your questions...",
+            "back": "Back",
+            "continue": "Continue",
+            "finish": "Finish Briefing"
+        },
+        "completed": {
+            "title": "Briefing Completed!",
+            "description": "Thank you, {{name}}! Your responses have been sent successfully and now the professional can start working on your project.",
+            "notified": "You will be notified about the next steps."
+        },
+        "footer": {
+            "management": "Professional Briefing Management",
+            "exclusive": "Exclusive Experience"
+        }
+    }
+}

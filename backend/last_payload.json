@@ -1,0 +1,169 @@
+{
+  "name": "Briefing Residencial Premium",
+  "description": "Coleta detalhada de dados técnicos, necessidades funcionais e desejos estéticos para projetos de casas de alto padrão.",
+  "blocks": [
+    {
+      "title": "Terreno e Premissas Técnicas",
+      "description": "Entender as características físicas e legais do lote para garantir a viabilidade técnica e evitar retrabalhos.",
+      "order": 0,
+      "questions": [
+        {
+          "text": "Localização Exata do Lote",
+          "type": "text",
+          "required": true,
+          "placeholder": "Endereço completo ou link do Google Maps",
+          "options": null
+        },
+        {
+          "text": "Área Total do Terreno (m²)",
+          "type": "number",
+          "required": false,
+          "placeholder": "Ex: 450",
+          "options": null
+        },
+        {
+          "text": "Situação do Levantamento Topográfico",
+          "type": "select",
+          "required": false,
+          "placeholder": "Selecione o estado atual do levantamento",
+          "options": [
+            "Já possuo",
+            "Desejo contratar através do escritório",
+            "Não possuo"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Possui animais de estimação?",
+      "description": "",
+      "order": 1,
+      "questions": [
+        {
+          "text": "",
+          "type": "select",
+          "required": false,
+          "placeholder": null,
+          "options": [
+            "Sim",
+            "Não"
+          ]
+        },
+        {
+          "text": "Qual o regime de trabalho dos moradores?",
+          "type": "multiselect",
+          "required": false,
+          "placeholder": "Selecione todas as opções que se aplicam aos moradores.",
+          "options": [
+            "Presencial total",
+            "Home Office (Precisa escritório)",
+            "Híbrido",
+            "Viagens frequentes"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Identidade Estética e Materiais",
+      "description": "Definir o \"clima\" da casa e a paleta de acabamentos que mais agrada o cliente.",
+      "order": 2,
+      "questions": [
+        {
+          "text": "Quais destes materiais mais lhe agradam visualmente?",
+          "type": "multiselect",
+          "required": false,
+          "placeholder": "Selecione os materiais que você gostaria de ver na sua fachada.",
+          "options": [
+            "Madeira Natural",
+            "Pedra Bruta",
+            "Vidro e Transparência",
+            "Concreto Aparente",
+            "Metais (Preto/Bronze)",
+            "Tijolinho"
+          ]
+        },
+        {
+          "text": "Estilo Arquitetônico Predileto",
+          "type": "select",
+          "required": false,
+          "placeholder": null,
+          "options": [
+            "Moderno/Minimalista",
+            "Clássico/Contemporâneo",
+            "Industrial",
+            "Rústico Moderno",
+            "Biofílico (Muitas plantas)"
+          ]
+        },
+        {
+          "text": "Descrição de Desejos Extras",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "Descreva aqui aquele item que não pode faltar na sua casa dos sonhos (ex: adega escondida, vista para o pôr do sol da cama...)",
+          "options": null
+        }
+      ]
+    },
+    {
+      "title": "Área Pet (Condicional)",
+      "description": "Projetar espaços específicos para o bem-estar e higiene dos animais, integrando-os à funcionalidade da casa (lavanderia, canil ou área gourmet).",
+      "order": 3,
+      "questions": [
+        {
+          "text": "Espécie e Porte dos Animais",
+          "type": "text",
+          "required": false,
+          "placeholder": "Ex: 2 Labradores grandes, 1 Gato persa...",
+          "options": null
+        },
+        {
+          "text": "Necessidades de Higiene (Pet Bath)",
+          "type": "select",
+          "required": false,
+          "placeholder": "Como será feita a higiene do pet em casa?",
+          "options": [
+            "Desejo área de banho na lavanderia",
+            "Ponto de ducha externo",
+            "Apenas local para secagem",
+            "Não necessita"
+          ]
+        },
+        {
+          "text": "Local de Dormir",
+          "type": "select",
+          "required": false,
+          "placeholder": null,
+          "options": [
+            "Dentro de casa (quarto/sala)",
+            "Espaço exclusivo (Copa Pet)",
+            "Canil externo planejado"
+          ]
+        },
+        {
+          "text": "Armazenamento e Alimentação",
+          "type": "multiselect",
+          "required": false,
+          "placeholder": "Selecione o que gostaria de ter planejado para o dia a dia do pet.",
+          "options": [
+            "Gavetão para ração (20kg+)",
+            "Bebedouro automático com ponto de água",
+            "Local para farmácia/acessórios"
+          ]
+        },
+        {
+          "text": "Observações sobre Comportamento",
+          "type": "textarea",
+          "required": false,
+          "placeholder": "Ex: O cachorro tem medo de trovão (precisa isolamento acústico), o gato precisa de prateleiras altas (catificação)...",
+          "options": null
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "expression": "{\"questionId\": \"pergunta_pet\", \"operator\": \"=\", \"value\": \"Sim\"}",
+      "action": "{\"type\": \"activate_block\", \"targetId\": \"bloco_area_pet\"}"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+### Register user (Admin)
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@tenant.com",
+  "password": "admin123",
+  "name": "Admin User",
+  "role": "Admin",
+  "tenantId": "TENANT_ID_AQUI"
+}
+
+### Login user
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@tenant.com",
+  "password": "admin123"
+}
+
+### List templates (token required)
+GET http://localhost:3001/templates
+Authorization: Bearer {{TOKEN}}
+
+### Create template (Admin/Editor)
+POST http://localhost:3001/templates
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "tenantId": "TENANT_ID_AQUI",
+  "name": "Template Teste",
+  "description": "Descrição do template"
+}
+
+### Publish template (Admin only)
+POST http://localhost:3001/templates/TEMPLATE_ID_AQUI/publish
+Authorization: Bearer {{TOKEN}}
+
+### Get template by ID
+GET http://localhost:3001/templates/TEMPLATE_ID_AQUI
+Authorization: Bearer {{TOKEN}}
+

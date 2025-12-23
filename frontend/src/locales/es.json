@@ -1,0 +1,151 @@
+{
+    "app": {
+        "title": "BriefAI",
+        "subtitle": "Constructor de Plantillas"
+    },
+    "auth": {
+        "login": "Iniciar sesión",
+        "logout": "Cerrar sesión",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "loginTitle": "Inicia sesión para continuar",
+        "invalidCredentials": "Correo electrónico o contraseña inválidos",
+        "loggingIn": "Iniciando sesión...",
+        "welcome": "Bienvenido"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "templates": "Plantillas",
+        "newTemplate": "Nueva Plantilla"
+    },
+    "templates": {
+        "title": "Plantillas",
+        "subtitle": "Gestiona tus plantillas de briefing",
+        "newTemplate": "Nueva Plantilla",
+        "noTemplates": "Sin plantillas",
+        "noTemplatesDescription": "Comienza creando una nueva plantilla de briefing.",
+        "createTemplate": "Crear Plantilla",
+        "viewDetails": "Ver detalles",
+        "published": "Publicado",
+        "draft": "Borrador",
+        "loading": "Cargando plantillas..."
+        ,
+        "allowDraftResponses": "Permitir respuestas en borrador"
+    },
+    "templateBuilder": {
+        "newTemplate": "Nueva Plantilla",
+        "editTemplate": "Editar Plantilla",
+        "save": "Guardar",
+        "saving": "Guardando...",
+        "publish": "Publicar",
+        "templateInfo": "Información de la Plantilla",
+        "name": "Nombre",
+        "namePlaceholder": "Ej.: Plantilla de Lanzamiento de Producto SaaS",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Describe el propósito de esta plantilla...",
+        "blocksAndQuestions": "Bloques y Preguntas",
+        "addBlock": "Agregar Bloque",
+        "noBlocks": "No hay bloques agregados. Haz clic en \"Agregar Bloque\" para comenzar.",
+        "conditionalRules": "Reglas Condicionales",
+        "rulesDescription": "Define reglas para activar/desactivar bloques o saltar preguntas",
+        "addRule": "Agregar Regla",
+        "noRules": "No hay reglas definidas.",
+        "nameRequired": "El nombre de la plantilla es obligatorio",
+        "saveSuccess": "¡Plantilla guardada con éxito!",
+        "saveError": "Error al guardar la plantilla",
+        "createSuccess": "¡Plantilla creada con éxito!",
+        "publishConfirm": "¿Estás seguro de que deseas publicar esta plantilla? Esta acción creará una versión inmutable.",
+        "publishSuccess": "¡Plantilla publicada con éxito!",
+        "publishError": "Error al publicar la plantilla",
+        "saveBeforePublish": "Guarda la plantilla antes de publicar",
+        "loadingTemplate": "Cargando plantilla...",
+        "loadError": "Error al cargar la plantilla",
+        "openedForEdit": "Plantilla abierta para editar. El estado volvió a Borrador.",
+        "openForEditConfirm": "¿Desea abrir esta plantilla para editar? Volverá al estado de Borrador e esta acción será auditada.",
+        "unlockEdit": "Abrir para Edición"
+        ,
+        "allowDraftResponses": "Permitir respuestas en borrador",
+        "allowDraftResponsesDesc": "Cuando está habilitado, iniciar un briefing creará una snapshot de la plantilla para vincular las respuestas a una versión estable."
+    },
+    "block": {
+        "title": "Título del Bloque",
+        "titlePlaceholder": "Ej: Contexto, Modelo de Negocio...",
+        "description": "Objetivo/Descripción del Bloque",
+        "descriptionPlaceholder": "Describa el objetivo de este bloque...",
+        "remove": "Eliminar bloque",
+        "addQuestion": "Añadir Pregunta"
+    },
+    "question": {
+        "placeholder": "Pregunta",
+        "textPlaceholder": "Texto de la Pregunta",
+        "helpText": "Texto de ayuda (Placeholder)",
+        "required": "Obligatoria",
+        "options": "Opciones de Respuesta",
+        "option": "Opción",
+        "addOption": "Añadir Opción",
+        "remove": "Eliminar pregunta",
+        "types": {
+            "text": "Texto Corto",
+            "textarea": "Texto Largo",
+            "number": "Número",
+            "select": "Selección Única",
+            "multiselect": "Selección Múltiple"
+        }
+    },
+    "rule": {
+        "title": "Regla",
+        "condition": "Condición (JSON)",
+        "conditionPlaceholder": "{\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Suscripción\"}",
+        "conditionExample": "Ejemplo: {\"questionId\": \"Q1\", \"operator\": \"=\", \"value\": \"Suscripción\"}",
+        "action": "Acción (JSON)",
+        "actionPlaceholder": "{\"type\": \"activate_block\", \"blockId\": \"B2\"}",
+        "actionTypes": "Tipos: activate_block, skip_question, set_metadata",
+        "remove": "Eliminar regla"
+    },
+    "common": {
+        "back": "Volver",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "loading": "Cargando...",
+        "error": "Error",
+        "success": "Éxito"
+    },
+    "filler": {
+        "welcome": {
+            "title": "Briefing del Proyecto",
+            "description": "Recopilación detallada de datos técnicos, necesidades funcionales y deseos estéticos para proyectos de viviendas de alto standing.",
+            "nameLabel": "¿Cómo podemos llamarte?",
+            "namePlaceholder": "Tu nombre completo",
+            "emailLabel": "¿Cuál es tu mejor correo electrónico?",
+            "emailPlaceholder": "tu@email.com",
+            "startButton": "Comenzar Briefing",
+            "safeAndPrivate": "Seguro y Privado",
+            "personalized": "Briefing Personalizado",
+            "processing": "Procesando..."
+        },
+        "header": {
+            "respondingAs": "Respondiendo como:",
+            "progress": "Progreso"
+        },
+        "filling": {
+            "authorized": "Acceso Autorizado",
+            "ready": "¡Todo está listo para comenzar! Haz clic abajo para cargar as perguntas do seu briefing.",
+            "startQuestions": "Iniciar Preguntas",
+            "preparing": "Preparando sus preguntas...",
+            "back": "Volver",
+            "continue": "Continuar",
+            "finish": "Finalizar Briefing"
+        },
+        "completed": {
+            "title": "¡Briefing Completado!",
+            "description": "¡Gracias, {{name}}! Tus respuestas han sido enviadas con éxito y ahora el profesional ya puede empezar a trabajar en tu proyecto.",
+            "notified": "Se te notificará sobre los próximos pasos."
+        },
+        "footer": {
+            "management": "Gestión de Briefing Profesional",
+            "exclusive": "Experiencia Exclusiva"
+        }
+    }
+}

@@ -1,0 +1,230 @@
+### Seed tenants
+POST http://localhost:3001/seed
+Content-Type: application/json
+
+###
+
+### Health check
+GET http://localhost:3001/health
+
+###
+
+### Register user (Admin) - Tenant A
+# Primeiro execute /seed para criar os tenants
+# Depois pegue o ID do Tenant A e substitua abaixo
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@tenanta.com",
+  "password": "admin123",
+  "name": "Admin Tenant A",
+  "role": "Admin",
+  "tenantId": "TENANT_A_ID_AQUI"
+}
+
+###
+
+### Register user (Editor) - Tenant A
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "editor@tenanta.com",
+  "password": "editor123",
+  "name": "Editor Tenant A",
+  "role": "Editor",
+  "tenantId": "TENANT_A_ID_AQUI"
+}
+
+###
+
+### Register user (Respondente) - Tenant A
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "respondente@tenanta.com",
+  "password": "resp123",
+  "name": "Respondente Tenant A",
+  "role": "Respondente",
+  "tenantId": "TENANT_A_ID_AQUI"
+}
+
+###
+
+### Register user (Admin) - Tenant B
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@tenantb.com",
+  "password": "admin123",
+  "name": "Admin Tenant B",
+  "role": "Admin",
+  "tenantId": "TENANT_B_ID_AQUI"
+}
+
+###
+
+### Login as Admin Tenant A
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@tenanta.com",
+  "password": "admin123"
+}
+
+# Copie o token retornado e use nas requisições abaixo substituindo {{TOKEN}}
+
+###
+
+### Login as Editor Tenant A
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "editor@tenanta.com",
+  "password": "editor123"
+}
+
+###
+
+### Login as Respondente Tenant A
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "respondente@tenanta.com",
+  "password": "resp123"
+}
+
+###
+
+### List templates (qualquer role autenticada)
+GET http://localhost:3001/templates
+Authorization: Bearer {{TOKEN}}
+x-tenant-id: TENANT_A_ID_AQUI
+
+###
+
+### Create template (Admin ou Editor)
+POST http://localhost:3001/templates
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "tenantId": "TENANT_A_ID_AQUI",
+  "name": "Template Lançamento Produto SaaS",
+  "description": "Template para briefing de lançamento de produtos SaaS",
+  "blocks": [
+    {
+      "title": "Contexto",
+      "order": 0,
+      "questions": [
+        {
+          "text": "Qual é o objetivo principal?",
+          "type": "select",
+          "required": true
+        },
+        {
+          "text": "Descreva o produto",
+          "type": "textarea",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Modelo de Negócio",
+      "order": 1,
+      "questions": [
+        {
+          "text": "Qual modelo de negócio?",
+          "type": "select",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Planos",
+      "order": 2,
+      "parentId": null,
+      "questions": [
+        {
+          "text": "Quantos planos?",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "expression": "{\"questionId\": \"Q_MODELO\", \"operator\": \"=\", \"value\": \"Assinatura\"}",
+      "action": "{\"type\": \"activate_block\", \"blockId\": \"B_PLANOS\"}"
+    },
+    {
+      "expression": "{\"questionId\": \"Q_OBJETIVO\", \"operator\": \"=\", \"value\": \"Redução de custos\"}",
+      "action": "{\"type\": \"skip_question\", \"questionId\": \"Q_X\"}"
+    },
+    {
+      "expression": "{\"questionId\": \"Q_ORCAMENTO\", \"operator\": \"<\", \"value\": 1000}",
+      "action": "{\"type\": \"set_metadata\", \"key\": \"risco\", \"value\": \"baixo\"}"
+    }
+  ]
+}
+
+# Copie o templateId retornado para usar nas próximas requisições
+
+###
+
+### Get template by ID
+GET http://localhost:3001/templates/TEMPLATE_ID_AQUI
+Authorization: Bearer {{TOKEN}}
+
+###
+
+### Update template (Admin ou Editor)
+PUT http://localhost:3001/templates/TEMPLATE_ID_AQUI
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "name": "Template Lançamento Produto SaaS - Atualizado",
+  "description": "Template atualizado para briefing de lançamento de produtos SaaS"
+}
+
+###
+
+### Publish template (apenas Admin)
+POST http://localhost:3001/templates/TEMPLATE_ID_AQUI/publish
+Authorization: Bearer {{TOKEN}}
+
+###
+
+### Test: Respondente tentando criar template (deve falhar com 403)
+POST http://localhost:3001/templates
+Authorization: Bearer {{TOKEN_RESPONDENTE}}
+Content-Type: application/json
+
+{
+  "tenantId": "TENANT_A_ID_AQUI",
+  "name": "Template Teste",
+  "description": "Não deve funcionar"
+}
+
+###
+
+### Test: Editor tentando publicar (deve falhar com 403)
+POST http://localhost:3001/templates/TEMPLATE_ID_AQUI/publish
+Authorization: Bearer {{TOKEN_EDITOR}}
+
+###
+
+### Test: Tenant B tentando acessar template do Tenant A (isolamento)
+GET http://localhost:3001/templates
+Authorization: Bearer {{TOKEN_TENANT_B}}
+x-tenant-id: TENANT_B_ID_AQUI
+
+###

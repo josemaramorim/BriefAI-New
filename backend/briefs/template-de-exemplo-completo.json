@@ -1,0 +1,131 @@
+{
+  "name": "Template de Exemplo - Projeto Residencial (Casa)",
+  "description": "Brief completo para projeto arquitetônico residencial — perguntas e regras de exemplo.",
+  "allowDraftResponses": true,
+  "published": false,
+  "blocks": [
+      {
+        "id": "block-site",
+        "title": "Informações do Lote",
+        "description": "Dados do terreno e restrições",
+        "order": 0,
+        "questions": [
+          { "id": "q-site-address", "text": "Endereço do terreno", "type": "text", "required": false },
+          { "id": "q-site-area", "text": "Área do terreno (m²)", "type": "number", "required": false },
+          { "id": "q-lot-orientation", "text": "Orientação do terreno", "type": "select", "required": false, "options": ["Norte","Sul","Leste","Oeste"] },
+          { "id": "q-lot-slope", "text": "Inclinação do terreno", "type": "select", "required": false, "options": ["flat","moderate","steep"] },
+          { "id": "q-regulatory-restrictions", "text": "Observações sobre restrições municipais, recuos, gabarito", "type": "textarea", "required": false }
+        ]
+      },
+      {
+        "id": "block-program",
+        "title": "Programa e Uso",
+        "description": "Número de cômodos e usos desejados",
+        "order": 1,
+        "questions": [
+          { "id": "q-bedrooms", "text": "Número de quartos desejados", "type": "number", "required": false },
+          { "id": "q-bathrooms", "text": "Número de banheiros", "type": "number", "required": false },
+          { "id": "q-home-office", "text": "Home office necessário?", "type": "select", "required": false, "options": ["yes","no"] },
+          { "id": "q-guest-suite", "text": "Suíte de hóspedes?", "type": "select", "required": false, "options": ["yes","no"] },
+          { "id": "q-living_style", "text": "Estilo de vida / usos especiais", "type": "textarea", "required": false }
+        ]
+      },
+      {
+        "id": "block-parking",
+        "title": "Garagem / Estacionamento",
+        "description": "Informações sobre vagas e tipo de garagem",
+        "order": 2,
+        "questions": [
+          { "id": "q-garage", "text": "Possui garagem?", "type": "select", "required": false, "options": ["none","one-car","two-car"] },
+          { "id": "q-garage_type", "text": "Tipo de garagem", "type": "select", "required": false, "options": ["covered","open","carport"] },
+          { "id": "q-garage_capacity", "text": "Número de vagas desejadas", "type": "number", "required": false }
+        ]
+      },
+      {
+        "id": "block-sustainability",
+        "title": "Sustentabilidade e Requisitos Técnicos",
+        "description": "Preferências por soluções sustentáveis e requisitos técnicos",
+        "order": 3,
+        "questions": [
+          { "id": "q-sustainability", "text": "Interessa em soluções sustentáveis?", "type": "select", "required": false, "options": ["yes","no"] },
+          { "id": "q-sustainability_notes", "text": "Observações sobre sustentabilidade", "type": "textarea", "required": false },
+          { "id": "q-accessibility", "text": "Necessita requisitos de acessibilidade/idade?", "type": "select", "required": false, "options": ["yes","no"] }
+        ]
+      },
+      {
+        "id": "block-site-engineering",
+        "title": "Verificação Estrutural / Terreno",
+        "description": "Quando o terreno exigir contenções ou logística especial",
+        "order": 4,
+        "questions": [
+          { "id": "q-need_retaining_wall", "text": "Necessita contenção/muros de arrimo?", "type": "select", "required": false, "options": ["yes","no"] },
+          { "id": "q-site_access", "text": "Observações sobre acesso de máquinas e logística", "type": "textarea", "required": false }
+        ]
+      },
+      {
+        "id": "block-high-end-materials",
+        "title": "Materiais e Acabamentos (Premium)",
+        "description": "Opções de acabamentos premium quando orçamento permitir",
+        "order": 5,
+        "questions": [
+          { "id": "q-materials_preference", "text": "Preferências por materiais/acabamentos", "type": "textarea", "required": false },
+          { "id": "q-include_budget_for_high_end", "text": "Incluir orçamento para acabamentos premium?", "type": "select", "required": false, "options": ["yes","no"] }
+        ]
+      },
+      {
+        "id": "block-priority-speed",
+        "title": "Soluções para Prazo Reduzido",
+        "description": "Opções e trade-offs quando prioridade for rapidez",
+        "order": 6,
+        "questions": [
+          { "id": "q-priority", "text": "Prioridade do projeto", "type": "select", "required": false, "options": ["cost","quality","speed"] }
+        ]
+      },
+      {
+        "id": "block-client",
+        "title": "Informações do Cliente",
+        "description": "Dados de contato do solicitante",
+        "order": 7,
+        "questions": [
+          { "id": "q-name", "text": "Nome do cliente", "type": "text", "required": true },
+          { "id": "q-email", "text": "Email de contato", "type": "text", "required": true },
+          { "id": "q-phone", "text": "Telefone", "type": "text", "required": false },
+          { "id": "q-desired-start", "text": "Data prevista de início", "type": "text", "required": false },
+          { "id": "q-desired-completion", "text": "Data prevista de conclusão", "type": "text", "required": false }
+        ]
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule-garagem",
+        "expression": "{\"questionId\":\"q-garage\",\"operator\":\"!=\",\"value\":\"none\"}",
+        "action": "{\"type\":\"activate_block\",\"targetId\":\"block-parking\"}",
+        "description": "Ativa bloco de garagem quando garagem diferente de 'none'"
+      },
+      {
+        "id": "rule-terreno-inclinado",
+        "expression": "{\"questionId\":\"q-lot-slope\",\"operator\":\"=\",\"value\":\"steep\"}",
+        "action": "{\"type\":\"activate_block\",\"targetId\":\"block-site-engineering\"}",
+        "description": "Ativa bloco de verificação de engenharia quando terreno for íngreme"
+      },
+      {
+        "id": "rule-alta-faixa-orcamento",
+        "expression": "{\"questionId\":\"q-budget-range\",\"operator\":\"=\",\"value\":\">100k\"}",
+        "action": "{\"type\":\"activate_block\",\"targetId\":\"block-high-end-materials\"}",
+        "description": "Ativa bloco de materiais premium para orçamentos altos"
+      },
+      {
+        "id": "rule-acessibilidade",
+        "expression": "{\"questionId\":\"q-accessibility\",\"operator\":\"=\",\"value\":\"yes\"}",
+        "action": "{\"type\":\"activate_block\",\"targetId\":\"block-accessibility\"}",
+        "description": "Ativa bloco de acessibilidade quando necessário"
+      },
+      {
+        "id": "rule-priority-speed",
+        "expression": "{\"questionId\":\"q-priority\",\"operator\":\"=\",\"value\":\"speed\"}",
+        "action": "{\"type\":\"activate_block\",\"targetId\":\"block-priority-speed\"}",
+        "description": "Ativa bloco de soluções rápidas quando a prioridade for 'speed'"
+      }
+    ],
+    "notes": "Este arquivo foi gerado a partir de template-brief-exemplo.txt; ajuste ids e textos conforme necessário antes de importar no ambiente de produção. Regras estão em formato string JSON adequado para colar no RuleEditor."
+}

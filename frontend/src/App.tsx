@@ -1,10 +1,101 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Login from './pages/Login';
+import Templates from './pages/Templates';
+import TemplateBuilder from './pages/TemplateBuilder';
+import Dashboard from './pages/Dashboard';
+import BriefFiller from './pages/BriefFiller';
+import './index.css';
+import { MainLayout } from './components/layout/MainLayout';
+import { Toaster } from './components/ui/toaster';
 
-export default function App(){
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+import BriefingResults from './pages/BriefingResults';
+import BriefingDetails from './pages/BriefingDetails';
+import Briefings from './pages/Briefings';
+
+function AppRoutes() {
   return (
-    <div style={{padding:20}}>
-      <h1>BriefAI — MVP Scaffold</h1>
-      <p>Frontend skeleton ready. Connect backend API at <code>/api</code>.</p>
-    </div>
-  )
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/templates"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Templates />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/templates/:id"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <TemplateBuilder />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/templates/:id/results"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <BriefingResults />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/briefings"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Briefings />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/briefings/:id"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <BriefingDetails />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route path="/fill/:id" element={<BriefFiller />} />
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+        <Toaster />
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }

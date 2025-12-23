@@ -1,0 +1,102 @@
+Template: Brief para Projeto Residencial (Casa) - Exemplo Completo
+
+Resumo do Projeto:
+- Título: Projeto Residencial - Casa Unifamiliar
+- Objetivo: Projeto arquitetônico completo (implantação, projeto arquitetônico, layout de interiores e propostas iniciais de materiais) para uma casa residencial unifamiliar.
+- Entregáveis esperados: plantas (implantação, planta baixa, cortes), fachadas, perspectiva 3D conceitual, memorial descritivo, lista preliminar de materiais, estimativa de custo por etapa.
+
+Informações do Cliente (preenchidas pelo respondente)
+- `q-name` (text, required): Nome do cliente
+- `q-email` (text, required): Email de contato
+- `q-phone` (text, optional): Telefone
+
+Informações do Lote / Terreno
+- `q-site-address` (text): Endereço do terreno
+- `q-site-area` (number): Área do terreno (m²)
+- `q-lot-orientation` (select): Orientação do terreno (Norte, Sul, Leste, Oeste)
+- `q-lot-slope` (select): Inclinação do terreno (flat, moderate, steep)
+- `q-regulatory-restrictions` (textarea): Observações sobre restrições municipais, recuos, gabarito
+
+Programa e Uso (perguntas sobre necessidades)
+- `q-bedrooms` (number): Nº de quartos desejados
+- `q-bathrooms` (number): Nº de banheiros
+- `q-home-office` (select): Home office necessário? (yes/no)
+- `q-garage` (select): Garagem? (none, one-car, two-car)
+- `q-guest-suite` (select): Suíte de hóspedes? (yes/no)
+- `q-living_style` (textarea): Estilo de vida / usos especiais (receber, pets, hobby)
+
+Orçamento e Prioridades
+- `q-budget-range` (select): Faixa de orçamento estimado ("<50k","50-100k",">100k")
+- `q-priority` (select): Prioridade do projeto (cost, quality, speed)
+
+Sustentabilidade / Requisitos Técnicos
+- `q-sustainability` (select): Interessa em soluções sustentáveis? (yes/no)
+- `q-accessibility` (select): Necessita requisitos de acessibilidade/idade? (yes/no)
+
+Prazo
+- `q-desired-start` (text): Data prevista de início
+- `q-desired-completion` (text): Data prevista de conclusão
+
+Blocos do Brief (IDs para uso nas regras)
+- `block-site` : Informações do lote (q-site-*)
+- `block-program` : Programa de necessidades (quartos, banheiros, etc.)
+- `block-parking` : Garagem/estacionamento
+- `block-accessibility` : Acessibilidade (opcional)
+- `block-sustainability` : Sustentabilidade e eficiência
+- `block-site-engineering` : Verificação de contenções e estruturas de terreno (quando encosta íngreme)
+- `block-high-end-materials` : Materiais e acabamentos premium (quando orçamento alto)
+
+Regras lógicas (formato JSON pronto para colar em RuleEditor)
+-- Observação: no `RuleEditor`, cole cada `expression` e `action` exatamente como JSON (texto bruto).
+
+1) Ativar bloco de garagem quando o respondente escolher garagem diferente de "none"
+expression:
+{"questionId":"q-garage","operator":"!=","value":"none"}
+action:
+{"type":"activate_block","targetId":"block-parking"}
+
+2) Ativar bloco de engenharia do terreno quando inclinação for "steep"
+expression:
+{"questionId":"q-lot-slope","operator":"=","value":"steep"}
+action:
+{"type":"activate_block","targetId":"block-site-engineering"}
+
+3) Ativar bloco de materiais premium quando orçamento for ">100k"
+expression:
+{"questionId":"q-budget-range","operator":"=","value":">100k"}
+action:
+{"type":"activate_block","targetId":"block-high-end-materials"}
+
+4) Ativar bloco de acessibilidade quando respondente indicar necessidade
+expression:
+{"questionId":"q-accessibility","operator":"=","value":"yes"}
+action:
+{"type":"activate_block","targetId":"block-accessibility"}
+
+5) Priorizar rapidez: quando `q-priority` for "speed", ativar bloco de soluções rápidas (ex.: simplificar projeto)
+expression:
+{"questionId":"q-priority","operator":"=","value":"speed"}
+action:
+{"type":"activate_block","targetId":"block-priority-speed"}
+
+Sugestões de uso das regras
+- Cada regra deve ser adicionada no editor de regras (`RuleEditor`) como um item separado.
+- `expression` e `action` devem ser strings JSON (como acima). O avaliador atual suporta operadores: "=", "!=", "contains".
+- `targetId` deve corresponder ao id do bloco que você criou no template (use os ids listados acima ou adapte conforme necessário).
+
+Exemplo de bloco completo (para copiar ao cadastrar manualmente)
+--- Bloco: Parking (block-parking)
+Perguntas:
+- `q-garage_type` (select): Tipo de garagem (covered, open, carport)
+- `q-garage_capacity` (number): Número de vagas desejadas
+
+--- Bloco: Site Engineering (block-site-engineering)
+Perguntas:
+- `q-need_retaining_wall` (select): Necessita contenção/muros de arrimo? (yes/no)
+- `q-site_access` (textarea): Observações sobre acesso de máquinas e logística
+
+Observações finais:
+- Ajuste os ids (`q-*` e `block-*`) se já existir um template com ids diferentes.
+- Se quiser, eu posso gerar o mesmo conteúdo no formato JSON para importar automaticamente no endpoint `POST /templates` (faça backup antes). Também posso adaptar regras para operadores numéricos compostos (AND/OR) se desejar — isso requer pequena alteração no avaliador de regras do frontend.
+
+Arquivo salvo para cadastro manual: backend/briefs/template-brief-exemplo.txt

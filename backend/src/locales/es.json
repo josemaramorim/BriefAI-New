@@ -1,0 +1,24 @@
+{
+    "errors": {
+        "emailPasswordRequired": "Correo electrónico y contraseña son obligatorios",
+        "emailPasswordTenantRequired": "Correo electrónico, contraseña y tenantId son obligatorios",
+        "invalidCredentials": "Credenciales inválidas",
+        "userAlreadyExists": "El usuario ya existe",
+        "templateNotFound": "Plantilla no encontrada",
+        "tenantIdRequired": "tenantId obligatorio (body o header x-tenant-id)",
+        "unauthorized": "No autorizado",
+        "missingAuthHeader": "Falta el header de autorización",
+        "invalidAuthHeader": "Header de autorización inválido",
+        "invalidToken": "Token inválido",
+        "notAuthenticated": "No autenticado",
+        "forbidden": "Acceso denegado",
+        "internalError": "Error interno del servidor"
+    },
+    "success": {
+        "userCreated": "Usuario creado con éxito",
+        "templateCreated": "Plantilla creada con éxito",
+        "templateUpdated": "Plantilla actualizada con éxito",
+        "templatePublished": "Plantilla publicada con éxito",
+        "seedCompleted": "Seed ejecutado con éxito"
+    }
+}
