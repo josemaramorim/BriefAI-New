@@ -61,11 +61,10 @@ async function main() {
                         create: [
                             {
                                 title: 'Bloco 1',
-                                order: 0,
                                 questions: {
                                     create: [
-                                        { text: 'Qual seu nome?', type: 'text', required: true, order: 0 },
-                                        { text: 'Idade?', type: 'number', required: false, order: 1 }
+                                        { text: 'Qual seu nome?', type: 'text', required: true },
+                                        { text: 'Idade?', type: 'number', required: false }
                                     ]
                                 }
                             }

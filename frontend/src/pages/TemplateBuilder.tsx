@@ -1,16 +1,17 @@
+import React from 'react';
 import { useState, useEffect } from 'react'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+ import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+ import { CSS } from '@dnd-kit/utilities'
+import { Menu } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 import BlockEditor from '../components/BlockEditor'
 import RuleEditor from '../components/RuleEditor'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
-import { Checkbox } from '../components/ui/checkbox'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
+import SortableBlock from '../components/SortableBlock'
+import { Button, Input, Textarea, Checkbox, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '../components/ui'
 import { ArrowLeft, Save, Send, Plus, Loader2, FileText } from 'lucide-react'
 import { useToast } from '../hooks/use-toast'
 
@@ -45,6 +46,7 @@ const TemplateBuilder: React.FC = () => {
     const { id } = useParams()
     const { user } = useAuth()
     const toast = useToast()
+    const sensors = useSensors(useSensor(PointerSensor))
 
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
@@ -68,7 +70,8 @@ const TemplateBuilder: React.FC = () => {
                 setName(tpl.name || '')
                 setDescription(tpl.description || '')
                 setAllowDraftResponses(Boolean(tpl.allowDraftResponses))
-                setBlocks(tpl.blocks || [])
+                const loadedBlocks = (tpl.blocks || []).map((b: any) => ({ ...b, id: b.id || crypto.randomUUID() }))
+                setBlocks(loadedBlocks)
                 setRules(tpl.rules || [])
                 setPublished(Boolean(tpl.published))
 
@@ -144,6 +147,7 @@ const TemplateBuilder: React.FC = () => {
         setBlocks([
             ...blocks,
             {
+                id: crypto.randomUUID(),
                 title: `${t('block.title')} ${blocks.length + 1}`,
                 order: blocks.length,
                 questions: [],
@@ -234,6 +238,7 @@ const TemplateBuilder: React.FC = () => {
                             {saving ? t('templateBuilder.saving') : t('templateBuilder.publish')}
                         </Button>
                     )}
+
                 </div>
             </div>
 
@@ -272,8 +277,7 @@ const TemplateBuilder: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-8">
                     {/* Blocks */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -297,11 +301,28 @@ const TemplateBuilder: React.FC = () => {
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
-                                    {blocks.map((block, index) => (
-                                        <BlockEditor key={index} block={block} index={index} onUpdate={(updatedBlock) => updateBlock(index, updatedBlock)} onRemove={() => removeBlock(index)} disabled={published} />
-                                    ))}
-                                </div>
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
+                                    const { active, over } = e
+                                    if (!over || active.id === over.id) return
+
+                                    setBlocks((items) => {
+                                        const oldIndex = items.findIndex((item) => item.id === active.id)
+                                        const newIndex = items.findIndex((item) => item.id === over.id)
+                                        if (oldIndex === -1 || newIndex === -1) return items
+
+                                        const next = arrayMove(items, oldIndex, newIndex)
+                                        next.forEach((b, i) => (b.order = i)) // Update order
+                                        return next
+                                    })
+                                }}>
+                                    <SortableContext items={blocks.map(b => b.id!)} strategy={verticalListSortingStrategy}>
+                                        <div className="space-y-4">
+                                            {blocks.map((block, index) => (
+                                                <SortableBlock key={block.id} id={block.id!} index={index} block={block} onUpdate={(updatedBlock: Block) => updateBlock(index, updatedBlock)} onRemove={() => removeBlock(index)} disabled={published} />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
                             )}
                         </CardContent>
                     </Card>
@@ -326,16 +347,27 @@ const TemplateBuilder: React.FC = () => {
                             ) : (
                                 <div className="space-y-4">
                                     {rules.map((rule, index) => (
-                                        <RuleEditor key={index} rule={rule} index={index} onUpdate={(updatedRule) => updateRule(index, updatedRule)} onRemove={() => removeRule(index)} disabled={published} availableKeys={availableQuestionKeys} />
+                                        <RuleEditor
+                                            key={index}
+                                            rule={rule}
+                                            index={index}
+                                            onUpdate={(updatedRule) => updateRule(index, updatedRule)}
+                                            onRemove={() => removeRule(index)}
+                                            disabled={published}
+                                            availableKeys={availableQuestionKeys}
+                                            blocks={blocks}
+                                        />
                                     ))}
                                 </div>
                             )}
+
                         </CardContent>
                     </Card>
-                </div>
+
+
             </div>
         </div>
-    )
+    );
 }
 
-export default TemplateBuilder
+export default TemplateBuilder;

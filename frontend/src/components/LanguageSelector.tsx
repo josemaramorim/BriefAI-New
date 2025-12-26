@@ -22,7 +22,7 @@ export default function LanguageSelector() {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium bg-card text-card-foreground border border-border hover:bg-muted rounded-md transition-colors"
             >
                 <span>{currentLanguage.flag}</span>
                 <span>{currentLanguage.name}</span>
@@ -42,14 +42,13 @@ export default function LanguageSelector() {
                         className="fixed inset-0 z-10"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200">
+                    <div className="absolute left-0 mt-2 w-48 bg-card text-card-foreground rounded-md shadow-lg z-20 border border-border">
                         <div className="py-1">
                             {languages.map((lang) => (
                                 <button
                                     key={lang.code}
                                     onClick={() => changeLanguage(lang.code)}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2 ${lang.code === i18n.language ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
-                                        }`}
+                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-muted flex items-center space-x-2 rounded ${lang.code === i18n.language ? 'bg-accent text-accent-foreground' : 'text-card-foreground'}`}
                                 >
                                     <span>{lang.flag}</span>
                                     <span>{lang.name}</span>

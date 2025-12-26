@@ -18,6 +18,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 import BriefingResults from './pages/BriefingResults';
 import BriefingDetails from './pages/BriefingDetails';
 import Briefings from './pages/Briefings';
+import WorkflowEditorPage from './pages/WorkflowEditorPage';
 
 function AppRoutes() {
   return (
@@ -79,6 +80,16 @@ function AppRoutes() {
           <PrivateRoute>
             <MainLayout>
               <BriefingDetails />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/workflow-editor"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <WorkflowEditorPage />
             </MainLayout>
           </PrivateRoute>
         }

@@ -189,6 +189,126 @@ app.get('/templates/:id', authMiddleware, requireRole('Admin', 'Editor', 'Respon
   }
 });
 
+// Endpoints to manage rules independently (useful for DnD builder)
+  // List rules for a template
+  app.get('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const rules = await prisma.rule.findMany({ where: { templateId: id }, orderBy: { createdAt: 'asc' } });
+      res.json(rules);
+    } catch (e) {
+      console.error('Error listing rules:', e);
+      res.status(500).json({ error: t(req, 'errors.internalError') });
+    }
+  });
+
+  // Create a rule for a template
+  app.post('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { expression, action } = req.body || {};
+
+      // Basic validation: if JSON, ensure referenced keys exist in template
+      const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
+      if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
+
+      const questionKeys = new Set<string>();
+      const blockKeys = new Set<string>();
+      for (const b of template.blocks || []) {
+        const bKey = (b as any).id || slugify((b as any).title || '');
+        blockKeys.add(bKey);
+        for (const q of (b as any).questions || []) {
+          const qKey = (q as any).id || slugify((q as any).text || '');
+          questionKeys.add(qKey);
+        }
+      }
+
+      const validationErrors: string[] = [];
+      try {
+        const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
+        if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
+      } catch (e) {
+        validationErrors.push('Invalid expression JSON');
+      }
+      try {
+        const act = typeof action === 'string' ? JSON.parse(action) : action;
+        if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
+        if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
+      } catch (e) {
+        // ignore non-json actions
+      }
+
+      if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+
+      const created = await prisma.rule.create({ data: { templateId: id, expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
+      await audit(req, 'CREATE', 'Rule', created.id, { templateId: id });
+      res.status(201).json(created);
+    } catch (e) {
+      console.error('Error creating rule:', e);
+      res.status(500).json({ error: t(req, 'errors.internalError') });
+    }
+  });
+
+  // Update rule
+  app.put('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    try {
+      const { id, ruleId } = req.params;
+      const { expression, action } = req.body || {};
+      const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
+      if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
+
+      const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
+      if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
+
+      const questionKeys = new Set<string>();
+      const blockKeys = new Set<string>();
+      for (const b of template.blocks || []) {
+        const bKey = (b as any).id || slugify((b as any).title || '');
+        blockKeys.add(bKey);
+        for (const q of (b as any).questions || []) questionKeys.add((q as any).id || slugify((q as any).text || ''));
+      }
+
+      const validationErrors: string[] = [];
+      try {
+        const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
+        if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
+      } catch (e) {
+        validationErrors.push('Invalid expression JSON');
+      }
+      try {
+        const act = typeof action === 'string' ? JSON.parse(action) : action;
+        if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
+        if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
+      } catch (e) {
+        // ignore
+      }
+
+      if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+
+      const updated = await prisma.rule.update({ where: { id: ruleId }, data: { expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
+      await audit(req, 'UPDATE', 'Rule', ruleId, { templateId: id });
+      res.json(updated);
+    } catch (e) {
+      console.error('Error updating rule:', e);
+      res.status(500).json({ error: t(req, 'errors.internalError') });
+    }
+  });
+
+  // Delete rule
+  app.delete('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    try {
+      const { id, ruleId } = req.params;
+      const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
+      if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
+      await prisma.rule.delete({ where: { id: ruleId } });
+      await audit(req, 'DELETE', 'Rule', ruleId, { templateId: id });
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('Error deleting rule:', e);
+      res.status(500).json({ error: t(req, 'errors.internalError') });
+    }
+  });
+
 app.post('/templates', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
   try {
     const { tenantId } = (req as any).user;

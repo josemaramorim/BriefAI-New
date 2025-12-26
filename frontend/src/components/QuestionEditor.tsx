@@ -1,9 +1,6 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Checkbox } from './ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Label } from './ui/label';
+import { Button, Input, Checkbox, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from './ui';
 import { X, Plus } from 'lucide-react';
 
 interface Question {
@@ -41,7 +38,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
         <div className="bg-background border rounded-md p-3 shadow-sm">
             <div className="flex items-start gap-4">
                 <div className="flex-1 space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                         <div className="flex-1">
                             <Input
                                 value={question.text}
@@ -51,7 +48,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                 disabled={disabled}
                             />
                         </div>
-                        <div className="w-48">
+                        <div className="flex-1">
                             <Input
                                 value={question.key || ''}
                                 onChange={(e) => onUpdate({ ...question, key: e.target.value })}
@@ -61,7 +58,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                     }
                                 }}
                                 placeholder={t('question.keyPlaceholder', 'key (ex: q-garage)')}
-                                className="h-9 text-xs"
+                                className="h-9"
                                 disabled={disabled}
                             />
                         </div>
@@ -70,7 +67,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                 value={question.placeholder || ''}
                                 onChange={(e) => onUpdate({ ...question, placeholder: e.target.value })}
                                 placeholder={t('question.helpText', 'Texto de ajuda (Placeholder)')}
-                                className="h-9 text-xs"
+                                className="h-9"
                                 disabled={disabled}
                             />
                         </div>
@@ -80,7 +77,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                 onValueChange={(value) => onUpdate({ ...question, type: value })}
                                 disabled={disabled}
                             >
-                                <SelectTrigger className="h-9" disabled={disabled}>
+                                <SelectTrigger className="h-9 mt-0 sm:mt-0" disabled={disabled}>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -110,7 +107,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
 
                     {(question.type === 'select' || question.type === 'multiselect') && (
                         <div className="space-y-2 pt-2 border-t mt-2">
-                            <Label className="text-xs font-semibold uppercase text-muted-foreground">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
                                 {t('question.options', 'Opções de Resposta')}
                             </Label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

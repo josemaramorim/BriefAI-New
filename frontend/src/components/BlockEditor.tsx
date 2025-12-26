@@ -1,7 +1,7 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import QuestionEditor from './QuestionEditor';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
+import { Button, Input } from './ui';
 import { Trash2, Plus } from 'lucide-react';
 
 interface Question {

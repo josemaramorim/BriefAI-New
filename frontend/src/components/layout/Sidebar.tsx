@@ -27,6 +27,11 @@ export function Sidebar({ className, mobile, onClose }: SidebarProps) {
             icon: FileText
         },
         {
+            href: '/workflow-editor',
+            label: 'Workflow Editor',
+            icon: WalletCards
+        },
+        {
             href: '/briefings',
             label: t('nav.briefings', 'Briefings'),
             icon: Inbox

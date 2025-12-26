@@ -3,15 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
-} from './ui/sheet';
+import AssistantBase from './AssistantBase';
 
 interface Props {
   open: boolean;
@@ -58,18 +50,21 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>{t('rule.assistantTitle', 'Assistente de Regra')}</SheetTitle>
-          <SheetDescription>{t('rule.assistantDesc', 'Crie uma condição em passos simples')}</SheetDescription>
-        </SheetHeader>
-
-        <div className="mt-4">
-          {step === 1 && (
-            <div className="space-y-2">
-              <Label>{t('rule.chooseKey', 'Escolha a variável')}</Label>
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('rule.searchPlaceholder', 'Pesquisar...')} />
+    <AssistantBase
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('rule.assistantTitle', 'Assistente de Regra')}
+      description={t('rule.assistantDesc', 'Crie uma condição em passos simples')}
+      onCancel={() => onOpenChange(false)}
+      onConfirm={handleInsert}
+      confirmText={t('action.insert', 'Inserir')}
+      confirmDisabled={!selectedKey || step !== 3}
+      type="sheet"
+    >
+      {step === 1 && (
+        <div className="space-y-2">
+          <Label>{t('rule.chooseKey', 'Escolha a variável')}</Label>
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('rule.searchPlaceholder', 'Pesquisar...')} />
               <div className="max-h-40 overflow-auto mt-2 border rounded p-2">
                 {filtered.map((k) => (
                   <div key={k} className={`p-2 rounded cursor-pointer ${selectedKey === k ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/10'}`} onClick={() => setSelectedKey(k)}>
@@ -85,7 +80,11 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
           {step === 2 && (
             <div className="space-y-2">
               <Label>{t('rule.chooseOperator', 'Escolha o operador')}</Label>
-              <select value={operator} onChange={(e) => setOperator(e.target.value)} className="w-full rounded border px-2 py-1">
+              <select
+                value={operator}
+                onChange={(e) => setOperator(e.target.value)}
+                className="w-full rounded border px-2 py-1 bg-card text-card-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+              >
                 <option value="equals">{t('operator.equals', 'Igual a')}</option>
                 <option value="not_equals">{t('operator.notEquals', 'Diferente de')}</option>
                 <option value="contains">{t('operator.contains', 'Contém')}</option>
@@ -109,21 +108,16 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
               </div>
             </div>
           )}
-        </div>
 
-        <SheetFooter>
-          <div className="flex items-center gap-2 w-full">
-            <div className="flex-1">
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('action.cancel', 'Cancelar')}</Button>
-            </div>
-            <div className="flex gap-2">
-              {step > 1 && <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>{t('action.back', 'Voltar')}</Button>}
-              {step < 3 && <Button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && !selectedKey}>{t('action.next', 'Próximo')}</Button>}
-              {step === 3 && <Button onClick={handleInsert} disabled={!selectedKey}>{t('action.insert', 'Inserir')}</Button>}
-            </div>
+        <div className="flex items-center gap-2 w-full mt-4">
+          <div className="flex-1">
+            {/* Botões de navegação de passo */}
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          <div className="flex gap-2">
+            {step > 1 && <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>{t('action.back', 'Voltar')}</Button>}
+            {step < 3 && <Button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && !selectedKey}>{t('action.next', 'Próximo')}</Button>}
+          </div>
+        </div>
+    </AssistantBase>
   );
 }

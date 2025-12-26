@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import RuleAssistant from './RuleAssistant';
+import ActionAssistant from './ActionAssistant';
 import { X } from 'lucide-react';
 
 interface Rule {
@@ -19,9 +20,10 @@ interface RuleEditorProps {
     onRemove: () => void;
     disabled?: boolean;
     availableKeys?: string[];
+    blocks?: { id?: string; title: string }[];
 }
 
-export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, availableKeys }: RuleEditorProps) {
+export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, availableKeys, blocks = [] }: RuleEditorProps) {
     const { t } = useTranslation();
 
     const keys = availableKeys || [];
@@ -33,6 +35,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
     const [tokenRange, setTokenRange] = React.useState<{ start: number; end: number } | null>(null);
     const [popPos, setPopPos] = React.useState<{ left: number; top: number } | null>(null);
     const [assistantOpen, setAssistantOpen] = React.useState(false);
+    const [actionAssistantOpen, setActionAssistantOpen] = React.useState(false);
 
     const filtered = React.useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -284,7 +287,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                                         )}
                                     </div>
                                 </div>
-                                <RuleAssistant open={assistantOpen} onOpenChange={setAssistantOpen} availableKeys={keys} onInsertAction={(json) => onUpdate({ ...rule, action: json })} />
+                                <RuleAssistant open={assistantOpen} onOpenChange={setAssistantOpen} availableKeys={keys} onInsertAction={(json) => onUpdate({ ...rule, expression: json })} />
                             </div>
                             <p className="text-[10px] text-muted-foreground/70">{t('rule.availableKeysHint', 'Available question keys')}</p>
                         </div>
@@ -323,6 +326,18 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                     <p className="text-[10px] text-muted-foreground/80 leading-tight">
                         {t('rule.actionTypes')}
                     </p>
+                    <div className="pt-2">
+                        <div className="flex items-center gap-2">
+                            <Button variant="secondary" size="sm" onClick={() => setActionAssistantOpen(true)} className="text-xs px-2 py-1" title={t('rule.assistantButton','Assistente')} aria-label={t('rule.assistantButton','Assistente')}>{t('rule.assistantButton','Assistente')}</Button>
+                            <ActionAssistant
+                                open={actionAssistantOpen}
+                                onOpenChange={setActionAssistantOpen}
+                                availableBlocks={Array.isArray(blocks) ? blocks.map(b => ({ id: b.id || '', title: b.title || '' })) : []}
+                                availableQuestions={Array.isArray(keys) ? keys.map(k => ({ key: k, text: k })) : []}
+                                onInsertAction={(json) => onUpdate({ ...rule, action: json })}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
