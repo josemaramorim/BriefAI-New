@@ -28,7 +28,7 @@ export function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
             <Sidebar mobile />
 
             <div className="w-full flex-1 md:w-auto md:flex-none">
@@ -40,7 +40,7 @@ export function Header() {
                 <ModeToggle />
 
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild className="text-foreground">
                         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src="/avatars/01.png" alt={user?.name || "User"} />
@@ -49,8 +49,8 @@ export function Header() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
-                        <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
+                        <DropdownMenuLabel className="font-normal text-foreground">
+                            <div className="flex flex-col space-y-1 text-foreground">
                                 <p className="text-sm font-medium leading-none">{user?.name}</p>
                                 <p className="text-xs leading-none text-muted-foreground">
                                     {user?.email}

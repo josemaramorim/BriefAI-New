@@ -9,6 +9,7 @@ import BriefFiller from './pages/BriefFiller';
 import './index.css';
 import { MainLayout } from './components/layout/MainLayout';
 import { Toaster } from './components/ui/toaster';
+import { ThemeProvider } from './components/theme-provider';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -104,8 +105,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
-        <Toaster />
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <AppRoutes />
+          <Toaster />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

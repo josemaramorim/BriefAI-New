@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
     return (
-        <div className="flex min-h-screen flex-col md:flex-row bg-background">
+        <div className="flex min-h-screen flex-col md:flex-row">
             {/* Desktop Sidebar */}
             <Sidebar />
 

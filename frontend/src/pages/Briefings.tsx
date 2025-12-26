@@ -55,7 +55,7 @@ export default function Briefings() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Briefings Recebidos</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Briefings Recebidos</h1>
                     <p className="text-muted-foreground mt-1">
                         Acompanhe todas as respostas e o progresso dos seus clientes.
                     </p>
@@ -102,7 +102,7 @@ export default function Briefings() {
             ) : (
                 <div className="grid gap-4">
                     {filteredInstances.map((instance) => (
-                        <Card key={instance.id} className="hover:shadow-md transition-shadow group overflow-hidden border-slate-200">
+                        <Card key={instance.id} className="hover:shadow-md transition-shadow group overflow-hidden border bg-card text-card-foreground">
                             <Link to={`/briefings/${instance.id}`} className="block">
                                 <CardContent className="p-0">
                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 gap-4">
@@ -112,10 +112,10 @@ export default function Briefings() {
                                             </div>
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <h3 className="font-bold text-lg text-slate-800">
+                                                    <h3 className="font-bold text-lg">
                                                         {instance.user?.name || 'Cliente sem nome'}
                                                     </h3>
-                                                    <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 bg-slate-50">
+                                                    <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-5 bg-muted text-muted-foreground">
                                                         {instance.template?.name}
                                                     </Badge>
                                                     <Badge variant={instance.status === 'completed' ? 'default' : 'secondary'} className="py-0 h-5">
@@ -135,11 +135,11 @@ export default function Briefings() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-4 sm:pt-0">
-                                            <div className="text-right">
-                                                <p className="text-sm font-medium text-slate-500">Respostas</p>
-                                                <p className="text-2xl font-bold text-slate-900">{instance._count.responses}</p>
+                                            <div className="text-right text-foreground">
+                                                <p className="text-sm font-medium text-muted-foreground">Respostas</p>
+                                                <p className="text-2xl font-bold text-foreground">{instance._count.responses}</p>
                                             </div>
-                                            <div className="bg-slate-50 p-2 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
+                                            <div className="bg-muted p-2 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                                                 <ChevronRight className="h-5 w-5" />
                                             </div>
                                         </div>
