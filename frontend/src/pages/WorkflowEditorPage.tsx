@@ -55,7 +55,7 @@ const WorkflowEditorPage: React.FC = () => {
       >
         <MiniMap />
         <Controls />
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant={"dots" as any} gap={12} size={1} />
       </ReactFlow>
     </div>
   );

@@ -1,19 +1,15 @@
-import React from 'react';
-import { useState, useEffect } from 'react'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
- import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
- import { CSS } from '@dnd-kit/utilities'
-import { Menu } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import api from '../lib/api'
-import BlockEditor from '../components/BlockEditor'
-import RuleEditor from '../components/RuleEditor'
-import SortableBlock from '../components/SortableBlock'
-import { Button, Input, Textarea, Checkbox, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '../components/ui'
-import { ArrowLeft, Save, Send, Plus, Loader2, FileText } from 'lucide-react'
-import { useToast } from '../hooks/use-toast'
+import React, { useState, useEffect } from 'react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../lib/api';
+import RuleEditor from '../components/RuleEditor';
+import SortableBlock from '../components/SortableBlock';
+import { Button, Input, Textarea, Checkbox, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '../components/ui';
+import { ArrowLeft, Save, Send, Plus, Loader2, FileText } from 'lucide-react';
+import { useToast } from '../hooks/use-toast';
 
 interface Block {
     id?: string
