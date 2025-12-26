@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -6,11 +7,82 @@ import i18n from 'i18n';
 import path from 'path';
 import { login, register, authMiddleware, requireRole, JWT_SECRET } from './auth';
 import jwt from 'jsonwebtoken';
+import multer, { StorageEngine } from 'multer';
+import fs from 'fs';
 
 dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
+
+// Tipagem para req.file do multer
+declare global {
+  namespace Express {
+    interface Request {
+      file?: Express.Multer.File;
+    }
+  }
+}
+
+// Configuração do provider de armazenamento de imagens
+const IMAGE_STORAGE_PROVIDER = process.env.IMAGE_STORAGE_PROVIDER || 'local';
+let upload: ReturnType<typeof multer>;
+if (IMAGE_STORAGE_PROVIDER === 'local') {
+  const storage: StorageEngine = multer.diskStorage({
+    destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
+      const templateId = req.params.id;
+      const dir = path.join(__dirname, '..', 'briefs', templateId, 'images');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: function (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  });
+  upload = multer({ storage });
+} else {
+  // Futuro: integração com S3, GCS, etc.
+  upload = multer({ storage: multer.memoryStorage() });
+}
+
+// Endpoint para upload de imagens de template
+app.post('/templates/:id/images', authMiddleware, requireRole('Admin', 'Editor'), upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const templateId = req.params.id;
+    const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
+    // Opcional: salvar o link no banco ou retornar para uso no frontend
+    res.status(201).json({ url: fileUrl, filename: req.file.filename });
+  } catch (e) {
+    res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
+  }
+});
+
+// Atualiza imageOptions de uma pergunta image_choice
+app.patch('/questions/:id/image-options', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { url, label } = req.body;
+    if (!url) return res.status(400).json({ error: 'Missing image url' });
+    const question = await prisma.question.findUnique({ where: { id } });
+    if (!question) return res.status(404).json({ error: 'Question not found' });
+    if (question.type !== 'image_choice') return res.status(400).json({ error: 'Not an image_choice question' });
+    let imageOptions = Array.isArray(question.imageOptions) ? question.imageOptions : [];
+    // Prisma pode retornar como objeto, então garantir array
+    if (!Array.isArray(imageOptions)) {
+      try { imageOptions = JSON.parse(imageOptions as any) || []; } catch { imageOptions = []; }
+    }
+    imageOptions.push({ url, label });
+    await prisma.question.update({ where: { id }, data: { imageOptions } });
+    res.json({ ok: true, imageOptions });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update imageOptions', details: (e as Error).message });
+  }
+});
 
 // Configure i18n
 i18n.configure({
