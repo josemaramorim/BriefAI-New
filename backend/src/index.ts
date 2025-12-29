@@ -15,6 +15,19 @@ dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3001',
+  'http://localhost:3001'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+app.use(express.json());
+
 // Tipagem para req.file do multer
 declare global {
   namespace Express {
@@ -26,12 +39,17 @@ declare global {
 
 // Configuração do provider de armazenamento de imagens
 const IMAGE_STORAGE_PROVIDER = process.env.IMAGE_STORAGE_PROVIDER || 'local';
+const LOCAL_IMAGES_PATH = process.env.LOCAL_IMAGES_PATH
+  ? path.resolve(process.env.LOCAL_IMAGES_PATH)
+  : path.join(__dirname, '..', 'briefs');
+console.log(`Image storage configured: provider=${IMAGE_STORAGE_PROVIDER}, path=${LOCAL_IMAGES_PATH}`);
 let upload: ReturnType<typeof multer>;
 if (IMAGE_STORAGE_PROVIDER === 'local') {
   const storage: StorageEngine = multer.diskStorage({
     destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
-      const templateId = req.params.id;
-      const dir = path.join(__dirname, '..', 'briefs', templateId, 'images');
+      const templateId = req.params.id || 'unknown';
+      const dir = path.join(LOCAL_IMAGES_PATH, templateId, 'images');
+      console.log(`[Multer] Saving image for template ${templateId} to: ${dir}`);
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
@@ -57,11 +75,22 @@ app.post('/upload', authMiddleware, requireRole('Admin', 'Editor'), upload.singl
     if (!templateId) {
       return res.status(400).json({ error: 'Missing templateId in request body' });
     }
-    const dir = path.join(__dirname, '..', 'briefs', templateId, 'images');
+    const dir = path.join(LOCAL_IMAGES_PATH, templateId, 'images');
+    console.log(`[/upload] Finalizing upload to: ${dir}`);
     fs.mkdirSync(dir, { recursive: true });
-    fs.renameSync(req.file.path, path.join(dir, req.file.filename));
+
+    const destPath = path.join(dir, req.file.filename);
+    if (req.file.path !== destPath) {
+      try {
+        fs.renameSync(req.file.path, destPath);
+      } catch (err) {
+        // Fallback para quando é entre drives diferentes (EXDEV)
+        console.warn('Rename failed, trying copy/unlink fallback:', err);
+        fs.copyFileSync(req.file.path, destPath);
+        fs.unlinkSync(req.file.path);
+      }
+    }
     const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
     res.status(201).json({ url: fileUrl, filename: req.file.filename });
   } catch (e) {
     res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
@@ -75,11 +104,42 @@ app.post('/templates/:id/images', authMiddleware, requireRole('Admin', 'Editor')
     }
     const templateId = req.params.id;
     const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
-    // Opcional: salvar o link no banco ou retornar para uso no frontend
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    console.log(`[/templates/:id/images] Uploaded image for ${templateId}: ${fileUrl}`);
     res.status(201).json({ url: fileUrl, filename: req.file.filename });
   } catch (e) {
     res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
+  }
+});
+
+// DELETE endpoint para remover imagens
+app.delete('/templates/:id/images/:imageName', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id: templateId, imageName } = req.params;
+    const { tenantId } = (req as any).user;
+
+    // Verificar se o template pertence ao tenant do usuário
+    const template = await prisma.template.findUnique({ where: { id: templateId } });
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    if (template.tenantId !== tenantId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Construir caminho do arquivo
+    const filePath = path.join(LOCAL_IMAGES_PATH, templateId, 'images', imageName);
+
+    // Deletar o arquivo (se existir)
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    await audit(req, 'DELETE', 'TemplateImage', imageName, { templateId });
+
+    res.json({ ok: true, message: 'Image deleted successfully' });
+  } catch (e) {
+    console.error('Error deleting image:', e);
+    res.status(500).json({ error: 'Failed to delete image', details: (e as Error).message });
   }
 });
 
@@ -114,20 +174,7 @@ i18n.configure({
   header: 'accept-language'
 });
 
-const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:3001',
-  'http://localhost:3001'
-];
-
-
-
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
-app.use(express.json());
+app.use('/briefs', express.static(LOCAL_IMAGES_PATH));
 
 // Helper to determine locale from request
 function getLocale(req: Request): string {
@@ -173,94 +220,94 @@ function slugify(s: string) {
 app.get('/health', (_req: Request, res: Response) => res.json({ ok: true }));
 
 app.get('/templates', authMiddleware, requireRole('Admin', 'Editor', 'Respondente'), async (req: Request, res: Response) => {
-app.post('/brief-instances/:id/duplicate', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { targetVersionId, copyAnswers = true } = req.body || {};
+  app.post('/brief-instances/:id/duplicate', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { targetVersionId, copyAnswers = true } = req.body || {};
 
-    const original = await prisma.briefInstance.findUnique({
-      where: { id },
-      include: { responses: true }
-    });
-    if (!original) return res.status(404).json({ error: 'Original brief instance not found' });
+      const original = await prisma.briefInstance.findUnique({
+        where: { id },
+        include: { responses: true }
+      });
+      if (!original) return res.status(404).json({ error: 'Original brief instance not found' });
 
-    // Determine target version: use provided or latest available for the template
-    let targetVersion = null as any;
-    if (targetVersionId) {
-      targetVersion = await prisma.templateVersion.findUnique({ where: { id: targetVersionId } });
-      if (!targetVersion) return res.status(404).json({ error: 'Target version not found' });
-    } else {
-      targetVersion = await prisma.templateVersion.findFirst({ where: { templateId: original.templateId }, orderBy: { createdAt: 'desc' } });
-    }
-
-    // Create duplicated instance
-    const duplicated = await prisma.briefInstance.create({
-      data: {
-        templateId: original.templateId,
-        versionId: targetVersion ? targetVersion.id : null,
-        userId: original.userId,
-        tenantId: original.tenantId,
-        status: 'draft',
-        metadata: original.metadata ?? undefined
+      // Determine target version: use provided or latest available for the template
+      let targetVersion = null as any;
+      if (targetVersionId) {
+        targetVersion = await prisma.templateVersion.findUnique({ where: { id: targetVersionId } });
+        if (!targetVersion) return res.status(404).json({ error: 'Target version not found' });
+      } else {
+        targetVersion = await prisma.templateVersion.findFirst({ where: { templateId: original.templateId }, orderBy: { createdAt: 'desc' } });
       }
-    });
 
-    const mapping: any[] = [];
-
-    if (copyAnswers && original.responses && original.responses.length > 0) {
-      // Prepare mapping of new questions by question text (from snapshot if available)
-      let targetQuestionMap: Record<string, string> = {};
-      if (targetVersion && targetVersion.data && targetVersion.data.blocks) {
-        try {
-          const snap = targetVersion.data as any;
-          for (const b of snap.blocks || []) {
-            for (const q of b.questions || []) {
-              if (q.text) targetQuestionMap[q.text.trim().toLowerCase()] = q.id;
-            }
-          }
-        } catch (e) {
-          // ignore snapshot parsing issues
+      // Create duplicated instance
+      const duplicated = await prisma.briefInstance.create({
+        data: {
+          templateId: original.templateId,
+          versionId: targetVersion ? targetVersion.id : null,
+          userId: original.userId,
+          tenantId: original.tenantId,
+          status: 'draft',
+          metadata: original.metadata ?? undefined
         }
-      }
+      });
 
-      // For each original response try to map to new question id by text match
-      for (const r of original.responses) {
-        try {
-          const q = await (prisma as any).question.findUnique({ where: { id: r.questionId } });
-          const qText = q?.text?.trim()?.toLowerCase();
-          let newQuestionId = null;
-          if (qText && targetQuestionMap[qText]) {
-            newQuestionId = targetQuestionMap[qText];
-          } else {
-            // Fallback: if same question id exists in new template structure, reuse it
-            const exists = await (prisma as any).question.findUnique({ where: { id: r.questionId } });
-            if (exists) newQuestionId = r.questionId;
-          }
+      const mapping: any[] = [];
 
-          if (newQuestionId) {
-            await (prisma as any).response.create({
-              data: {
-                briefId: duplicated.id,
-                questionId: newQuestionId,
-                value: r.value
+      if (copyAnswers && original.responses && original.responses.length > 0) {
+        // Prepare mapping of new questions by question text (from snapshot if available)
+        let targetQuestionMap: Record<string, string> = {};
+        if (targetVersion && targetVersion.data && targetVersion.data.blocks) {
+          try {
+            const snap = targetVersion.data as any;
+            for (const b of snap.blocks || []) {
+              for (const q of b.questions || []) {
+                if (q.text) targetQuestionMap[q.text.trim().toLowerCase()] = q.id;
               }
-            });
-            mapping.push({ fromResponseId: r.id, fromQuestionId: r.questionId, toQuestionId: newQuestionId });
+            }
+          } catch (e) {
+            // ignore snapshot parsing issues
           }
-        } catch (e) {
-          console.warn('Error copying response', r.id, e);
+        }
+
+        // For each original response try to map to new question id by text match
+        for (const r of original.responses) {
+          try {
+            const q = await (prisma as any).question.findUnique({ where: { id: r.questionId } });
+            const qText = q?.text?.trim()?.toLowerCase();
+            let newQuestionId = null;
+            if (qText && targetQuestionMap[qText]) {
+              newQuestionId = targetQuestionMap[qText];
+            } else {
+              // Fallback: if same question id exists in new template structure, reuse it
+              const exists = await (prisma as any).question.findUnique({ where: { id: r.questionId } });
+              if (exists) newQuestionId = r.questionId;
+            }
+
+            if (newQuestionId) {
+              await (prisma as any).response.create({
+                data: {
+                  briefId: duplicated.id,
+                  questionId: newQuestionId,
+                  value: r.value
+                }
+              });
+              mapping.push({ fromResponseId: r.id, fromQuestionId: r.questionId, toQuestionId: newQuestionId });
+            }
+          } catch (e) {
+            console.warn('Error copying response', r.id, e);
+          }
         }
       }
+
+      await audit(req, 'DUPLICATE', 'BriefInstance', duplicated.id, { originalId: original.id, mappings: mapping });
+
+      res.json({ ok: true, newInstanceId: duplicated.id, mappings: mapping });
+    } catch (e) {
+      console.error('Error duplicating instance:', e);
+      res.status(500).json({ error: 'Internal server error' });
     }
-
-    await audit(req, 'DUPLICATE', 'BriefInstance', duplicated.id, { originalId: original.id, mappings: mapping });
-
-    res.json({ ok: true, newInstanceId: duplicated.id, mappings: mapping });
-  } catch (e) {
-    console.error('Error duplicating instance:', e);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+  });
   try {
     const { tenantId } = (req as any).user;
     const templates = await prisma.template.findMany({
@@ -298,124 +345,124 @@ app.get('/templates/:id', authMiddleware, requireRole('Admin', 'Editor', 'Respon
 });
 
 // Endpoints to manage rules independently (useful for DnD builder)
-  // List rules for a template
-  app.get('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const rules = await prisma.rule.findMany({ where: { templateId: id }, orderBy: { createdAt: 'asc' } });
-      res.json(rules);
-    } catch (e) {
-      console.error('Error listing rules:', e);
-      res.status(500).json({ error: t(req, 'errors.internalError') });
+// List rules for a template
+app.get('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const rules = await prisma.rule.findMany({ where: { templateId: id }, orderBy: { createdAt: 'asc' } });
+    res.json(rules);
+  } catch (e) {
+    console.error('Error listing rules:', e);
+    res.status(500).json({ error: t(req, 'errors.internalError') });
+  }
+});
+
+// Create a rule for a template
+app.post('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { expression, action } = req.body || {};
+
+    // Basic validation: if JSON, ensure referenced keys exist in template
+    const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
+    if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
+
+    const questionKeys = new Set<string>();
+    const blockKeys = new Set<string>();
+    for (const b of template.blocks || []) {
+      const bKey = (b as any).id || slugify((b as any).title || '');
+      blockKeys.add(bKey);
+      for (const q of (b as any).questions || []) {
+        const qKey = (q as any).id || slugify((q as any).text || '');
+        questionKeys.add(qKey);
+      }
     }
-  });
 
-  // Create a rule for a template
-  app.post('/templates/:id/rules', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    const validationErrors: string[] = [];
     try {
-      const { id } = req.params;
-      const { expression, action } = req.body || {};
-
-      // Basic validation: if JSON, ensure referenced keys exist in template
-      const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
-      if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
-
-      const questionKeys = new Set<string>();
-      const blockKeys = new Set<string>();
-      for (const b of template.blocks || []) {
-        const bKey = (b as any).id || slugify((b as any).title || '');
-        blockKeys.add(bKey);
-        for (const q of (b as any).questions || []) {
-          const qKey = (q as any).id || slugify((q as any).text || '');
-          questionKeys.add(qKey);
-        }
-      }
-
-      const validationErrors: string[] = [];
-      try {
-        const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
-        if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
-      } catch (e) {
-        validationErrors.push('Invalid expression JSON');
-      }
-      try {
-        const act = typeof action === 'string' ? JSON.parse(action) : action;
-        if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
-        if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
-      } catch (e) {
-        // ignore non-json actions
-      }
-
-      if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
-
-      const created = await prisma.rule.create({ data: { templateId: id, expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
-      await audit(req, 'CREATE', 'Rule', created.id, { templateId: id });
-      res.status(201).json(created);
+      const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
+      if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
     } catch (e) {
-      console.error('Error creating rule:', e);
-      res.status(500).json({ error: t(req, 'errors.internalError') });
+      validationErrors.push('Invalid expression JSON');
     }
-  });
-
-  // Update rule
-  app.put('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
     try {
-      const { id, ruleId } = req.params;
-      const { expression, action } = req.body || {};
-      const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
-      if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
-
-      const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
-      if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
-
-      const questionKeys = new Set<string>();
-      const blockKeys = new Set<string>();
-      for (const b of template.blocks || []) {
-        const bKey = (b as any).id || slugify((b as any).title || '');
-        blockKeys.add(bKey);
-        for (const q of (b as any).questions || []) questionKeys.add((q as any).id || slugify((q as any).text || ''));
-      }
-
-      const validationErrors: string[] = [];
-      try {
-        const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
-        if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
-      } catch (e) {
-        validationErrors.push('Invalid expression JSON');
-      }
-      try {
-        const act = typeof action === 'string' ? JSON.parse(action) : action;
-        if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
-        if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
-      } catch (e) {
-        // ignore
-      }
-
-      if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
-
-      const updated = await prisma.rule.update({ where: { id: ruleId }, data: { expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
-      await audit(req, 'UPDATE', 'Rule', ruleId, { templateId: id });
-      res.json(updated);
+      const act = typeof action === 'string' ? JSON.parse(action) : action;
+      if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
+      if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
     } catch (e) {
-      console.error('Error updating rule:', e);
-      res.status(500).json({ error: t(req, 'errors.internalError') });
+      // ignore non-json actions
     }
-  });
 
-  // Delete rule
-  app.delete('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+    if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+
+    const created = await prisma.rule.create({ data: { templateId: id, expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
+    await audit(req, 'CREATE', 'Rule', created.id, { templateId: id });
+    res.status(201).json(created);
+  } catch (e) {
+    console.error('Error creating rule:', e);
+    res.status(500).json({ error: t(req, 'errors.internalError') });
+  }
+});
+
+// Update rule
+app.put('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id, ruleId } = req.params;
+    const { expression, action } = req.body || {};
+    const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
+    if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
+
+    const template = await prisma.template.findUnique({ where: { id }, include: { blocks: { include: { questions: true } } } });
+    if (!template) return res.status(404).json({ error: t(req, 'errors.templateNotFound') });
+
+    const questionKeys = new Set<string>();
+    const blockKeys = new Set<string>();
+    for (const b of template.blocks || []) {
+      const bKey = (b as any).id || slugify((b as any).title || '');
+      blockKeys.add(bKey);
+      for (const q of (b as any).questions || []) questionKeys.add((q as any).id || slugify((q as any).text || ''));
+    }
+
+    const validationErrors: string[] = [];
     try {
-      const { id, ruleId } = req.params;
-      const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
-      if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
-      await prisma.rule.delete({ where: { id: ruleId } });
-      await audit(req, 'DELETE', 'Rule', ruleId, { templateId: id });
-      res.json({ ok: true });
+      const expr = typeof expression === 'string' ? JSON.parse(expression) : expression;
+      if (expr && expr.questionId && !questionKeys.has(expr.questionId)) validationErrors.push(`Missing question key \"${expr.questionId}\"`);
     } catch (e) {
-      console.error('Error deleting rule:', e);
-      res.status(500).json({ error: t(req, 'errors.internalError') });
+      validationErrors.push('Invalid expression JSON');
     }
-  });
+    try {
+      const act = typeof action === 'string' ? JSON.parse(action) : action;
+      if (act && act.targetId && !blockKeys.has(act.targetId)) validationErrors.push(`Missing target block key \"${act.targetId}\"`);
+      if (act && act.questionId && !questionKeys.has(act.questionId)) validationErrors.push(`Missing action question key \"${act.questionId}\"`);
+    } catch (e) {
+      // ignore
+    }
+
+    if (validationErrors.length > 0) return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+
+    const updated = await prisma.rule.update({ where: { id: ruleId }, data: { expression: typeof expression === 'object' ? JSON.stringify(expression) : expression, action: typeof action === 'object' ? JSON.stringify(action) : action } });
+    await audit(req, 'UPDATE', 'Rule', ruleId, { templateId: id });
+    res.json(updated);
+  } catch (e) {
+    console.error('Error updating rule:', e);
+    res.status(500).json({ error: t(req, 'errors.internalError') });
+  }
+});
+
+// Delete rule
+app.delete('/templates/:id/rules/:ruleId', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
+  try {
+    const { id, ruleId } = req.params;
+    const rule = await prisma.rule.findUnique({ where: { id: ruleId } });
+    if (!rule || rule.templateId !== id) return res.status(404).json({ error: t(req, 'errors.notFound') });
+    await prisma.rule.delete({ where: { id: ruleId } });
+    await audit(req, 'DELETE', 'Rule', ruleId, { templateId: id });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Error deleting rule:', e);
+    res.status(500).json({ error: t(req, 'errors.internalError') });
+  }
+});
 
 app.post('/templates', authMiddleware, requireRole('Admin', 'Editor'), async (req: Request, res: Response) => {
   try {

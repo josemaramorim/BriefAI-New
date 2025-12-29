@@ -15,6 +15,8 @@ Orientar a equipe sobre como migrar o armazenamento de imagens do modo local par
      - `S3_ACCESS_KEY=...`
      - `S3_SECRET_KEY=...`
      - `S3_REGION=...`
+   - Para o modo **local**, você pode configurar o caminho:
+     - `LOCAL_IMAGES_PATH=./briefs` (caminho relativo à raiz do backend)
 
 3. **Implementação Backend**
    - Adapte a configuração do multer para usar o storage do provider (ex: `multer-s3`).
