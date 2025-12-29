@@ -88,6 +88,19 @@ export default function BriefingDetails() {
             );
         }
 
+        if (type === 'image_choice' && Array.isArray(value)) {
+            return (
+                <div className="flex flex-wrap gap-2">
+                    {value.map((imgOpt: { url: string; label?: string }, i: number) => (
+                        <div key={i} className="flex flex-col items-center p-2 border rounded-md">
+                            <img src={imgOpt.url} alt={imgOpt.label || 'Imagem selecionada'} className="w-24 h-24 object-cover rounded-md" />
+                            {imgOpt.label && <span className="text-sm text-muted-foreground mt-1">{imgOpt.label}</span>}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
         return <span className="text-slate-700 whitespace-pre-wrap">{value.toString()}</span>;
     };
 

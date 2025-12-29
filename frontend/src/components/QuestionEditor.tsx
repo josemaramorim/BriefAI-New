@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, Checkbox, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from './ui';
+import api from '../lib/api';
 import { X, Plus } from 'lucide-react';
+
+interface ImageOption {
+    url: string;
+    label?: string;
+}
 
 interface Question {
     id?: string;
@@ -11,6 +18,10 @@ interface Question {
     required: boolean;
     placeholder?: string;
     options?: string[];
+    imageOptions?: ImageOption[];
+    imageChoiceConfig?: {
+        multiple?: boolean;
+    };
 }
 
 interface QuestionEditorProps {
@@ -23,6 +34,7 @@ interface QuestionEditorProps {
 
 export default function QuestionEditor({ question, index, onUpdate, onRemove, disabled }: QuestionEditorProps) {
     const { t } = useTranslation();
+    const { toast } = useToast();
 
     const slugify = (s: string) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -32,6 +44,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
         { value: 'number', label: t('question.types.number') },
         { value: 'select', label: t('question.types.select') },
         { value: 'multiselect', label: t('question.types.multiselect') },
+        { value: 'image_choice', label: t('question.types.image_choice', 'Escolha de Imagem') },
     ];
 
     return (
@@ -150,6 +163,410 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                 >
                                     <Plus className="mr-2 h-3 w-3" />
                                     {t('question.addOption', 'Adicionar Opção')}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {question.type === 'image_choice' && (
+                        <div className="space-y-2 pt-2 border-t mt-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                                {t('question.imageOptions', 'Opções de Imagem')}
+                            </Label>
+                            <div className="flex items-center gap-4 mb-2">
+                                <Checkbox
+                                    id={`multiple-${index}`}
+                                    checked={!!question.imageChoiceConfig?.multiple}
+                                    onCheckedChange={(checked) => {
+                                        onUpdate({
+                                            ...question,
+                                            imageChoiceConfig: {
+                                                ...question.imageChoiceConfig,
+                                                multiple: !!checked,
+                                            },
+                                        });
+                                    }}
+                                    disabled={disabled}
+                                />
+                                <Label htmlFor={`multiple-${index}`} className="text-sm cursor-pointer">
+                                    {t('question.imageChoiceMultiple', 'Permitir seleção múltipla')}
+                                </Label>
+                            </div>
+                            <div className="space-y-2">
+                                {(question.imageOptions || []).map((imgOpt, imgIdx) => (
+                                    <div key={imgIdx} className="flex items-center gap-2">
+                                        <Input
+                                            type="text"
+                                            value={imgOpt.url}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, url: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageUrl', 'URL da Imagem')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={imgOpt.label || ''}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, label: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageLabel', 'Legenda da Imagem (Opcional)')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                const newImageOptions = (question.imageOptions || []).filter((_, i) => i !== imgIdx);
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newImageOptions = [...(question.imageOptions || []), { url: '', label: '' }];
+                                        onUpdate({ ...question, imageOptions: newImageOptions });
+                                    }}
+                                    className="h-8 border-dashed"
+                                    disabled={disabled}
+                                >
+                                    <Plus className="mr-2 h-3 w-3" />
+                                    {t('question.addImageOption', 'Adicionar Opção de Imagem')}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {question.type === 'text' && question.key === 'descreva-o-seu-projeto' && (
+                        <div className="space-y-2 pt-2 border-t mt-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                                {t('question.textOptions', 'Opções de Texto')}
+                            </Label>
+                            <div className="flex items-center gap-4 mb-2">
+                                <Checkbox
+                                    id={`long-text-${index}`}
+                                    checked={!!question.imageChoiceConfig?.multiple} // Reusing multiple for long text, consider a new field if needed
+                                    onCheckedChange={(checked) => {
+                                        onUpdate({
+                                            ...question,
+                                            imageChoiceConfig: {
+                                                ...question.imageChoiceConfig,
+                                                multiple: !!checked,
+                                            },
+                                        });
+                                    }}
+                                    disabled={disabled}
+                                />
+                                <Label htmlFor={`long-text-${index}`} className="text-sm cursor-pointer">
+                                    {t('question.longText', 'Texto Longo')}
+                                </Label>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <Button variant="ghost" size="icon" onClick={onRemove} disabled={disabled} className="flex-shrink-0">
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, url: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageUrl', 'URL da Imagem')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={imgOpt.label || ''}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, label: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageLabel', 'Legenda da Imagem (Opcional)')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                const newImageOptions = (question.imageOptions || []).filter((_, i) => i !== imgIdx);
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newImageOptions = [...(question.imageOptions || []), { url: '', label: '' }];
+                                        onUpdate({ ...question, imageOptions: newImageOptions });
+                                    }}
+                                    className="h-8 border-dashed"
+                                    disabled={disabled}
+                                >
+                                    <Plus className="mr-2 h-3 w-3" />
+                                    {t('question.addImageOption', 'Adicionar Opção de Imagem')}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {question.type === 'text' && question.key === 'descreva-o-seu-projeto' && (
+                        <div className="space-y-2 pt-2 border-t mt-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                                {t('question.textOptions', 'Opções de Texto')}
+                            </Label>
+                            <div className="flex items-center gap-4 mb-2">
+                                <Checkbox
+                                    id={`long-text-${index}`}
+                                    checked={!!question.imageChoiceConfig?.multiple} // Reusing multiple for long text, consider a new field if needed
+                                    onCheckedChange={(checked) => {
+                                        onUpdate({
+                                            ...question,
+                                            imageChoiceConfig: {
+                                                ...question.imageChoiceConfig,
+                                                multiple: !!checked,
+                                            },
+                                        });
+                                    }}
+                                    disabled={disabled}
+                                />
+                                <Label htmlFor={`long-text-${index}`} className="text-sm cursor-pointer">
+                                    {t('question.longText', 'Texto Longo')}
+                                </Label>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <Button variant="ghost" size="icon" onClick={onRemove} disabled={disabled} className="flex-shrink-0">
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, url: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageUrl', 'URL da Imagem')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Input
+                                            type="text"
+                                            value={imgOpt.label || ''}
+                                            onChange={(e) => {
+                                                const newImageOptions = [...(question.imageOptions || [])];
+                                                newImageOptions[imgIdx] = { ...imgOpt, label: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            placeholder={t('question.imageLabel', 'Legenda da Imagem (Opcional)')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                const newImageOptions = (question.imageOptions || []).filter((_, i) => i !== imgIdx);
+                                                onUpdate({ ...question, imageOptions: newImageOptions });
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newImageOptions = [...(question.imageOptions || []), { url: '', label: '' }];
+                                        onUpdate({ ...question, imageOptions: newImageOptions });
+                                    }}
+                                    className="h-8 border-dashed"
+                                    disabled={disabled}
+                                >
+                                    <Plus className="mr-2 h-3 w-3" />
+                                    {t('question.addImageOption', 'Adicionar Opção de Imagem')}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {question.type === 'text' && question.key === 'descreva-o-seu-projeto' && (
+                        <div className="space-y-2 pt-2 border-t mt-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                                {t('question.textOptions', 'Opções de Texto')}
+                            </Label>
+                            <div className="flex items-center gap-4 mb-2">
+                                <Checkbox
+                                    id={`long-text-${index}`}
+                                    checked={!!question.imageChoiceConfig?.multiple} // Reusing multiple for long text, consider a new field if needed
+                                    onCheckedChange={(checked) => {
+                                        onUpdate({
+                                            ...question,
+                                            imageChoiceConfig: {
+                                                ...question.imageChoiceConfig,
+                                                multiple: !!checked,
+                                            },
+                                        });
+                                    }}
+                                    disabled={disabled}
+                                />
+                                <Label htmlFor={`long-text-${index}`} className="text-sm cursor-pointer">
+                                    {t('question.longText', 'Texto Longo')}
+                                </Label>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <Button variant="ghost" size="icon" onClick={onRemove} disabled={disabled} className="flex-shrink-0">
+                    <X className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+}
+                                            onChange={e => {
+                                                const newOpts = [...(question.imageOptions || [])];
+                                                newOpts[imgIdx] = { ...imgOpt, url: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newOpts });
+                                            }}
+                                            placeholder={t('question.imageUrl', 'URL da Imagem')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            style={{ display: 'none' }}
+                                            ref={el => {
+                                                if (!el) return;
+                                                if (!el.dataset.imgidx) el.dataset.imgidx = String(imgIdx);
+                                            }}
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                // Tenta obter o templateId do contexto (pode ser passado via prop futuramente)
+                                                let templateId = '';
+                                                // Busca no localStorage ou window.location
+                                                if (window.location.pathname.includes('/templates/')) {
+                                                    const parts = window.location.pathname.split('/');
+                                                    const idx = parts.indexOf('templates');
+                                                    if (idx !== -1 && parts[idx + 1]) templateId = parts[idx + 1];
+                                                }
+                                                if (!templateId || templateId === 'new') {
+                                                    toast({
+                                                        title: t('question.saveTemplateFirst', 'Salve o template antes de enviar imagens.'),
+                                                        description: t('question.saveTemplateFirstDesc', 'Clique em salvar e depois tente novamente.'),
+                                                        variant: 'destructive',
+                                                    });
+                                                    return;
+                                                }
+                                                const formData = new FormData();
+                                                formData.append('image', file);
+                                                try {
+                                                    const res = await api.post(`/templates/${templateId}/images`, formData, {
+                                                        headers: { 'Content-Type': 'multipart/form-data' },
+                                                    });
+                                                    const url = res.data.url;
+                                                    const newOpts = [...(question.imageOptions || [])];
+                                                    newOpts[imgIdx] = { ...imgOpt, url };
+                                                    onUpdate({ ...question, imageOptions: newOpts });
+                                                } catch (err) {
+                                                    toast({
+                                                        title: t('question.uploadFailed', 'Falha ao enviar imagem.'),
+                                                        description: t('question.uploadFailedDesc', 'Verifique sua conexão ou tente novamente.'),
+                                                        variant: 'destructive',
+                                                    });
+                                                }
+                                            }}
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                // Aciona o input file correspondente
+                                                const inputs = document.querySelectorAll('input[type="file"][accept^="image/"]');
+                                                if (inputs && inputs[imgIdx]) (inputs[imgIdx] as HTMLInputElement).click();
+                                            }}
+                                            className="h-8 px-2"
+                                            disabled={disabled}
+                                        >
+                                            {t('question.uploadImage', 'Upload')}
+                                        </Button>
+                                        <Input
+                                            type="text"
+                                            value={imgOpt.label || ''}
+                                            onChange={e => {
+                                                const newOpts = [...(question.imageOptions || [])];
+                                                newOpts[imgIdx] = { ...imgOpt, label: e.target.value };
+                                                onUpdate({ ...question, imageOptions: newOpts });
+                                            }}
+                                            placeholder={t('question.imageLabel', 'Legenda (opcional)')}
+                                            className="h-8 text-sm"
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                const newOpts = (question.imageOptions || []).filter((_, i) => i !== imgIdx);
+                                                onUpdate({ ...question, imageOptions: newOpts });
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                        {imgOpt.url && (
+                                            <img src={imgOpt.url} alt={imgOpt.label || ''} className="h-10 w-10 object-cover rounded border" />
+                                        )}
+                                    </div>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newOpts = [...(question.imageOptions || []), { url: '', label: '' }];
+                                        onUpdate({ ...question, imageOptions: newOpts });
+                                    }}
+                                    className="h-8 border-dashed"
+                                    disabled={disabled}
+                                >
+                                    <Plus className="mr-2 h-3 w-3" />
+                                    {t('question.addImageOption', 'Adicionar Imagem')}
                                 </Button>
                             </div>
                         </div>

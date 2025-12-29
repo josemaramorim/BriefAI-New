@@ -152,6 +152,7 @@ export default function BriefFiller() {
         try {
             const response = await api.get(`/templates/${templateId}/full`);
             setTemplateInfo(response.data);
+            console.log('Template completo carregado:', response.data); // Adicionado para depuração
             // Initial visibility calculation happens after template is loaded via useEffect
         } catch (error) {
             console.error('Error loading full template:', error);
@@ -180,7 +181,7 @@ export default function BriefFiller() {
                 if (condition.operator === 'contains') isMatch = Array.isArray(answer) && answer.includes(condition.value);
 
                 if (action.type === 'activate_block') {
-                    // Logic: By default blocks could be hidden if they have a rule? 
+                    // Logic: By default blocks could be hidden if they have a rule?
                     // Let's keep it simple for MVP: If it has an activate rule and it's NOT met, HIDE it.
                     if (!isMatch) {
                         activeBlockIds.delete(action.targetId || action.blockId);
@@ -197,6 +198,7 @@ export default function BriefFiller() {
             .map(b => b.id);
 
         setVisibleBlockIds(sortedIds);
+        console.log('Blocos visíveis após avaliação das regras:', sortedIds); // Adicionado para depuração
     };
 
     const handleStart = async (e: React.FormEvent) => {

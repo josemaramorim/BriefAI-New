@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:3001',
+    baseURL: 'http://localhost:3001',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -37,5 +37,17 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+export const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await api.post('/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data.url;
+};
 
 export default api;

@@ -41,7 +41,7 @@ const TemplateBuilder: React.FC = () => {
     const navigate = useNavigate()
     const { id } = useParams()
     const { user } = useAuth()
-    const toast = useToast()
+    const { toast } = useToast()
     const sensors = useSensors(useSensor(PointerSensor))
 
     const [loading, setLoading] = useState(false)
