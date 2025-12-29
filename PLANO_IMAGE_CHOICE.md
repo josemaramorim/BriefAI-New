@@ -1,4 +1,4 @@
-    # Plano de Execução: Perguntas com Seleção de Imagens (Single/Multiple Choice)
+# Plano de Execução: Perguntas com Seleção de Imagens (Single/Multiple Choice)
 
     ## Objetivo
     Implementar perguntas do tipo "Escolha de Imagem" no editor de templates, permitindo seleção única ou múltipla, com suporte a armazenamento local e em nuvem.
@@ -12,27 +12,27 @@
     - Implementar endpoints para upload local e integração futura com nuvem.
 
     ### 2. Upload e Gestão de Imagens
-    - Implementar upload local: cada template/briefing terá sua própria pasta de imagens.
-    - Salvar imagens com nomes únicos e registrar o link no banco.
+    - [x] Implementar upload local: cada template/briefing terá sua própria pasta de imagens.
+    - [x] Salvar imagens com nomes únicos e registrar o link no banco.
     - Permitir configuração do provider de armazenamento (local/nuvem) via variável de ambiente.
     - Documentar processo de migração para nuvem.
 
     ### 3. Editor de Templates
-    - Adicionar opção "Escolha de Imagem" no editor de perguntas.
-    - Permitir upload/seleção de imagens para cada opção.
-    - Configurar se a pergunta aceita uma ou múltiplas imagens.
-    - Adicionar campo de legenda/texto opcional para cada imagem.
+    - Adicionar opção "Escolha de Imagem" no editor de perguntas. (Concluído)
+    - Permitir upload/seleção de imagens para cada opção. (Upload implementado, seleção visual pendente)
+    - Configurar se a pergunta aceita uma ou múltiplas imagens. (Concluído)
+    - Adicionar campo de legenda/texto opcional para cada imagem. (Concluído)
 
-    ### 4. Componente Visual de Seleção
-    - Criar componente de UI para exibir imagens como opções clicáveis.
-    - Implementar comportamento de seleção única (radio) e múltipla (checkbox).
-    - Destacar visualmente as imagens selecionadas.
-    - Garantir responsividade e acessibilidade (teclado, descrição alternativa).
+    - [x] **Passo 4: Componente Visual de Seleção de Imagens (Frontend)**
+  - [x] Criar um componente de UI para exibir as imagens como opções clicáveis.
+  - [x] Permitir seleção única ou múltipla, conforme a configuração da pergunta.
+  - [x] Adicionar destaque visual para imagens selecionadas.
+  - [x] Garantir que o componente seja responsivo e se adapte a diferentes tamanhos de tela.
 
     ### 5. Validação e Salvamento de Respostas
-    - Validar seleção conforme configuração (única/múltipla).
-    - Salvar apenas os links das imagens selecionadas como resposta.
-    - Permitir visualização da escolha na revisão do briefing.
+- [x] Validar seleção conforme configuração (única/múltipla).
+- [x] Salvar apenas os links das imagens selecionadas como resposta.
+- [x] Permitir visualização da escolha na revisão do briefing.
 
     ### 6. Integração com Nuvem (Produção)
     - Integrar upload com serviço de nuvem (S3, Google Cloud Storage, etc).

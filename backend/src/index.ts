@@ -48,6 +48,26 @@ if (IMAGE_STORAGE_PROVIDER === 'local') {
 }
 
 // Endpoint para upload de imagens de template
+app.post('/upload', authMiddleware, requireRole('Admin', 'Editor'), upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const { templateId } = req.body;
+    if (!templateId) {
+      return res.status(400).json({ error: 'Missing templateId in request body' });
+    }
+    const dir = path.join(__dirname, '..', 'briefs', templateId, 'images');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.renameSync(req.file.path, path.join(dir, req.file.filename));
+    const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    res.status(201).json({ url: fileUrl, filename: req.file.filename });
+  } catch (e) {
+    res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
+  }
+});
+
 app.post('/templates/:id/images', authMiddleware, requireRole('Admin', 'Editor'), upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -56,6 +76,7 @@ app.post('/templates/:id/images', authMiddleware, requireRole('Admin', 'Editor')
     const templateId = req.params.id;
     const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
     // Opcional: salvar o link no banco ou retornar para uso no frontend
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
     res.status(201).json({ url: fileUrl, filename: req.file.filename });
   } catch (e) {
     res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
@@ -93,7 +114,19 @@ i18n.configure({
   header: 'accept-language'
 });
 
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3001',
+  'http://localhost:3001'
+];
+
+
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(express.json());
 
 // Helper to determine locale from request
@@ -245,8 +278,11 @@ app.get('/templates/:id', authMiddleware, requireRole('Admin', 'Editor', 'Respon
     const template = await prisma.template.findUnique({
       where: { id },
       include: {
+
         blocks: {
-          include: { questions: true },
+          include: {
+            questions: true
+          },
           orderBy: { order: 'asc' }
         },
         rules: true
@@ -444,7 +480,8 @@ app.post('/templates', authMiddleware, requireRole('Admin', 'Editor'), async (re
                 type: q.type,
                 required: q.required,
                 placeholder: q.placeholder,
-                options: q.options
+                options: q.options,
+                imageOptions: q.imageOptions // Adicionado para salvar as opções de imagem
               }))
             }
           }))
@@ -545,7 +582,8 @@ app.put('/templates/:id', authMiddleware, requireRole('Admin', 'Editor'), async 
                 type: q.type,
                 required: q.required,
                 placeholder: q.placeholder,
-                options: q.options
+                options: q.options,
+                imageOptions: q.imageOptions // Adicionado para salvar as opções de imagem
               }))
             }
           }))
@@ -1009,4 +1047,4 @@ app.post('/seed', async (req: Request, res: Response) => {
 });
 
 const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`Backend listening on ${port}`));
+app.listen(port, () => console.log(`Backend listening on port ${port}`));

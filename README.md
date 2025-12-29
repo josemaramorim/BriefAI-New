@@ -1,3 +1,18 @@
+## Configuração do Armazenamento de Imagens
+
+O backend suporta configuração do provider de armazenamento de imagens via variável de ambiente:
+
+- `IMAGE_STORAGE_PROVIDER`: Define o tipo de armazenamento de imagens. Valores possíveis:
+	- `local` (padrão): As imagens são salvas em disco, na pasta `backend/briefs/<templateId>/images`.
+	- (futuro) `s3`, `gcs`, etc: Para integração com nuvem.
+
+Exemplo no arquivo `.env`:
+
+```env
+IMAGE_STORAGE_PROVIDER=local
+```
+
+Se não definido, o padrão é `local`.
 # BriefAI MVP — Scaffold
 
 Este repositório contém planejamento e um scaffold mínimo do MVP.
