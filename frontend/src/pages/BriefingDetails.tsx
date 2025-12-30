@@ -89,12 +89,21 @@ export default function BriefingDetails() {
         }
 
         if (type === 'image_choice' && Array.isArray(value)) {
+            const resolveImageUrl = (url: string) => {
+                if (!url) return '';
+                if (url.startsWith('http')) return url;
+                return `http://localhost:3001${url.startsWith('/') ? '' : '/'}${url}`;
+            };
+
             return (
-                <div className="flex flex-wrap gap-2">
-                    {value.map((imgOpt: { url: string; label?: string }, i: number) => (
-                        <div key={i} className="flex flex-col items-center p-2 border rounded-md">
-                            <img src={imgOpt.url} alt={imgOpt.label || 'Imagem selecionada'} className="w-24 h-24 object-cover rounded-md" />
-                            {imgOpt.label && <span className="text-sm text-muted-foreground mt-1">{imgOpt.label}</span>}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
+                    {value.map((url: string, i: number) => (
+                        <div key={i} className="flex flex-col items-center p-2 border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                            <img
+                                src={resolveImageUrl(url)}
+                                alt={`Seleção ${i + 1}`}
+                                className="w-full h-24 object-cover rounded-lg"
+                            />
                         </div>
                     ))}
                 </div>

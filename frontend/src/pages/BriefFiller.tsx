@@ -176,13 +176,23 @@ export default function BriefFiller() {
                 const answer = responses[condition.questionId];
                 let isMatch = false;
 
-                if (condition.operator === '=') isMatch = answer === condition.value;
-                if (condition.operator === '!=') isMatch = answer !== condition.value;
-                if (condition.operator === 'contains') isMatch = Array.isArray(answer) && answer.includes(condition.value);
+                if (condition.operator === '=') {
+                    // For single choice or text
+                    isMatch = answer === condition.value;
+                } else if (condition.operator === '!=') {
+                    isMatch = answer !== condition.value;
+                } else if (condition.operator === 'contains') {
+                    // Handle array values (multiselect or multiple image choice)
+                    if (Array.isArray(answer)) {
+                        isMatch = answer.includes(condition.value);
+                    } else if (typeof answer === 'string') {
+                        isMatch = answer.includes(condition.value);
+                    }
+                }
+
+                console.log(`[Rules] Evaluating Rule: ${condition.questionId} ${condition.operator} ${condition.value} | Answer: ${JSON.stringify(answer)} | Match: ${isMatch}`);
 
                 if (action.type === 'activate_block') {
-                    // Logic: By default blocks could be hidden if they have a rule?
-                    // Let's keep it simple for MVP: If it has an activate rule and it's NOT met, HIDE it.
                     if (!isMatch) {
                         activeBlockIds.delete(action.targetId || action.blockId);
                     }

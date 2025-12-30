@@ -26,6 +26,15 @@ interface QuestionRendererProps {
 export default function QuestionRenderer({ question, value, onChange, disabled }: QuestionRendererProps) {
     const options = Array.isArray(question.options) ? question.options : [];
 
+    // Helper to resolve image URLs (handles relative paths from backend)
+    const resolveImageUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        // Prefix with API base URL if relative
+        const baseURL = 'http://localhost:3001'; // Should match api.ts
+        return `${baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
+
     const renderInput = () => {
         // Debug log for each question render
         if (value !== undefined) {
@@ -131,7 +140,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                                     onChange(nextSelection);
                                 }}
                             >
-                                <img src={imgOpt.url} alt={imgOpt.label || 'Image option'} className="w-full h-32 object-cover" />
+                                <img src={resolveImageUrl(imgOpt.url)} alt={imgOpt.label || 'Image option'} className="w-full h-32 object-cover" />
                                 {imgOpt.label && (
                                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
                                         {imgOpt.label}
