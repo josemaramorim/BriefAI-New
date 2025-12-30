@@ -26,7 +26,7 @@ interface RuleEditorProps {
     onRemove: () => void;
     disabled?: boolean;
     availableKeys?: TargetItem[];
-    blocks?: { id?: string; title: string }[];
+    blocks?: { id?: string; key?: string; title: string }[];
 }
 
 export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, availableKeys, blocks = [] }: RuleEditorProps) {
@@ -338,7 +338,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                             <ActionAssistant
                                 open={actionAssistantOpen}
                                 onOpenChange={setActionAssistantOpen}
-                                availableBlocks={Array.isArray(blocks) ? blocks.map(b => ({ id: b.id || '', title: b.title || '' })) : []}
+                                availableBlocks={Array.isArray(blocks) ? blocks.map(b => ({ id: b.id || '', key: b.key, title: b.title || '' })) : []}
                                 availableQuestions={Array.isArray(keys) ? keys.map(k => ({ key: k.value, text: k.label })) : []}
                                 onInsertAction={(json) => onUpdate({ ...rule, action: json })}
                             />

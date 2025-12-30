@@ -7,8 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import RuleEditor from '../components/RuleEditor';
 import SortableBlock from '../components/SortableBlock';
-import { Button, Input, Textarea, Checkbox, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '../components/ui';
-import { ArrowLeft, Save, Send, Plus, Loader2, FileText } from 'lucide-react';
+import { Button, Input, Textarea, Checkbox, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui';
+import { ArrowLeft, Save, Send, Plus, Loader2, FileText, AlertTriangle } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 interface Block {
@@ -48,6 +48,8 @@ const TemplateBuilder: React.FC = () => {
     const sensors = useSensors(useSensor(PointerSensor))
 
     const [loading, setLoading] = useState(false)
+    const [saveWarnings, setSaveWarnings] = useState<string[]>([])
+    const [showWarningDialog, setShowWarningDialog] = useState(false)
     const [saving, setSaving] = useState(false)
     const [published, setPublished] = useState(false)
 
@@ -117,7 +119,11 @@ const TemplateBuilder: React.FC = () => {
                 const res = await api.post('/templates', payload)
                 navigate(`/templates/${res.data.templateId}`)
             } else {
-                await api.put(`/templates/${id}`, payload)
+                const res = await api.put(`/templates/${id}`, payload)
+                if (res.data.warnings && res.data.warnings.length > 0) {
+                    setSaveWarnings(res.data.warnings)
+                    setShowWarningDialog(true)
+                }
             }
             toast({ title: t('templateBuilder.saveSuccess') })
         } catch (err) {
@@ -165,6 +171,7 @@ const TemplateBuilder: React.FC = () => {
             ...blocks,
             {
                 id: crypto.randomUUID(),
+                key: `blk_${Math.random().toString(36).substr(2, 9)}`,
                 title: `${t('block.title')} ${blocks.length + 1}`,
                 order: blocks.length,
                 questions: [],
@@ -383,6 +390,30 @@ const TemplateBuilder: React.FC = () => {
 
 
             </div>
+
+            <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2 text-amber-500">
+                            <AlertTriangle className="h-5 w-5" />
+                            {t('templateBuilder.paramWarnings', 'Avisos de Validação')}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t('templateBuilder.warningsDesc', 'O template foi salvo, mas algumas regras podem não funcionar corretamente:')}
+                            <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground space-y-1 max-h-60 overflow-y-auto">
+                                {saveWarnings.map((w, i) => (
+                                    <li key={i}>{w}</li>
+                                ))}
+                            </ul>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setShowWarningDialog(false)}>
+                            {t('common.ok', 'Entendi')}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

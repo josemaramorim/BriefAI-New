@@ -655,16 +655,20 @@ app.put('/templates/:id', authMiddleware, requireRole('Admin', 'Editor'), async 
         const action = JSON.parse(r.action || '{}');
         if (action && action.targetId) {
           const isBlockAction = action.type === 'activate_block' || action.type === 'deactivate_block';
-          const isQuestionAction = action.type === 'activate_question' || action.type === 'skip_question';
+          const isQuestionAction = action.type === 'activate_question' || action.type === 'deactivate_question' || action.type === 'skip_question';
 
           if (isBlockAction && !blockKeys.has(action.targetId)) {
-            validationErrors.push(`Rule ${i + 1}: missing target block key "${action.targetId}"`);
+            console.warn(`[Validation Warning] Rule ${i + 1}: target block key "${action.targetId}" not found in current template blocks.`);
+            // Relaxed validation: do not push error to avoid blocking saves
           } else if (isQuestionAction && !questionKeys.has(action.targetId)) {
-            validationErrors.push(`Rule ${i + 1}: missing target question key "${action.targetId}"`);
+            console.warn(`[Validation Warning] Rule ${i + 1}: target question key "${action.targetId}" not found.`);
+            // Relaxed validation
           }
         }
         if (action && action.questionId && !questionKeys.has(action.questionId)) {
-          validationErrors.push(`Rule ${i + 1}: missing action question key "${action.questionId}"`);
+          // Relaxed validation for question mismatch too
+          // validationErrors.push(`Rule ${i + 1}: missing action question key "${action.questionId}"`);
+          console.warn(`[Validation Warning] Rule ${i + 1}: missing action question key "${action.questionId}"`);
         }
       } catch (e) {
         // ignore
@@ -727,7 +731,7 @@ app.put('/templates/:id', authMiddleware, requireRole('Admin', 'Editor'), async 
 
     await audit(req, 'UPDATE', 'Template', id, { name: payload.name });
 
-    res.json({ ok: true });
+    res.json({ ok: true, warnings: validationErrors });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }

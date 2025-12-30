@@ -167,30 +167,55 @@ export default function BriefFiller() {
     const evaluateRules = () => {
         if (!templateInfo || !templateInfo.blocks) return;
 
-        // All active items (initialize with both IDs and Keys)
+        // Map any identifier (Key or ID) to the Canonical ID (CUID)
+        const blockMap: Record<string, string> = {};
+        const questionMap: Record<string, string> = {};
+
+        // Active sets only store Canonical IDs
         const activeBlockIdentifiers = new Set<string>();
         const activeQuestionIdentifiers = new Set<string>();
 
         templateInfo.blocks.forEach(b => {
-            activeBlockIdentifiers.add(b.id);
-            if (b.key) activeBlockIdentifiers.add(b.key);
+            // Register Block
+            activeBlockIdentifiers.add(b.id); // Default visible
+            blockMap[b.id] = b.id;
+            if (b.key) blockMap[b.key] = b.id;
+
             b.questions.forEach(q => {
-                activeQuestionIdentifiers.add(q.id);
-                if (q.key) activeQuestionIdentifiers.add(q.key);
+                // Register Question
+                activeQuestionIdentifiers.add(q.id); // Default visible
+                questionMap[q.id] = q.id;
+                if (q.key) questionMap[q.key] = q.id;
             });
         });
 
-        (templateInfo.rules || []).forEach(rule => {
+        (templateInfo.rules || []).forEach((rule, idx) => {
             try {
                 const condition = JSON.parse(rule.expression);
                 const action = JSON.parse(rule.action);
 
-                // Find the answer using either questionId or q.key
+                // Resolve Answer
+                // 1. Try direct ID
                 let answer = responses[condition.questionId];
+                // 2. Try Key resolution if answer missing
+                if (answer === undefined && questionMap[condition.questionId]) {
+                    answer = responses[questionMap[condition.questionId]];
+                }
+
+                // Fallback: Check if response is stored by Key (less likely but possible in future)
+                if (answer === undefined) {
+                    answer = responses[condition.questionId];
+                }
 
                 const isMatch = (val: any) => {
-                    if (condition.operator === '=') return val === condition.value;
-                    if (condition.operator === '!=') return val !== condition.value;
+                    if (val === undefined || val === null) return false;
+
+                    // Normalize string comparisons to handle case/trimming issues
+                    const normalize = (s: any) => String(s).trim().toLowerCase();
+
+                    if (condition.operator === '=') return val == condition.value; // Loose equality for numbers/strings
+                    if (condition.operator === 'equals') return normalize(val) === normalize(condition.value); // Specific 'equals' operator logic
+                    if (condition.operator === '!=') return val != condition.value;
 
                     const numAnswer = parseFloat(val);
                     const numValue = parseFloat(condition.value);
@@ -202,27 +227,44 @@ export default function BriefFiller() {
                     if (condition.operator === '<=') return isNumeric && numAnswer <= numValue;
 
                     if (condition.operator === 'contains') {
-                        if (Array.isArray(val)) return val.includes(condition.value);
-                        if (typeof val === 'string') return val.includes(condition.value);
+                        if (Array.isArray(val)) return val.some(v => normalize(v).includes(normalize(condition.value)));
+                        if (typeof val === 'string') return normalize(val).includes(normalize(condition.value));
                     }
                     return false;
                 };
 
                 const matched = isMatch(answer);
 
-                console.log(`[Rules] Evaluating Rule: ${condition.questionId} ${condition.operator} ${condition.value} | Answer: ${JSON.stringify(answer)} | Match: ${matched}`);
+                const rawTarget = action.targetId || action.blockId || action.questionId;
 
-                if (action.type === 'activate_block') {
-                    const targetId = action.targetId || action.blockId;
-                    if (!matched) {
-                        activeBlockIdentifiers.delete(targetId);
+                if (action.type.includes('_block')) {
+                    const canonicalId = blockMap[rawTarget];
+                    if (!canonicalId) {
+                        console.warn(`[Rule #${idx}] Block Target '${rawTarget}' not found in template.`);
+                        return;
                     }
-                } else if (action.type === 'activate_question') {
-                    const targetId = action.targetId || action.questionId;
-                    if (!matched) {
-                        activeQuestionIdentifiers.delete(targetId);
+
+                    if (action.type === 'activate_block') {
+                        if (!matched) activeBlockIdentifiers.delete(canonicalId);
+                    } else if (action.type === 'deactivate_block') {
+                        if (matched) activeBlockIdentifiers.delete(canonicalId);
+                    }
+                } else if (action.type.includes('_question')) {
+                    const canonicalId = questionMap[rawTarget];
+                    if (!canonicalId) {
+                        console.warn(`[Rule #${idx}] Question Target '${rawTarget}' not found in template.`);
+                        return;
+                    }
+
+                    if (action.type === 'activate_question') {
+                        if (!matched) activeQuestionIdentifiers.delete(canonicalId);
+                    } else if (action.type === 'deactivate_question') {
+                        if (matched) activeQuestionIdentifiers.delete(canonicalId);
+                    } else if (action.type === 'skip_question') {
+                        if (matched) activeQuestionIdentifiers.delete(canonicalId);
                     }
                 }
+
             } catch (e) {
                 console.error('Error evaluating rule:', e);
             }
@@ -235,7 +277,6 @@ export default function BriefFiller() {
 
         setVisibleBlockIds(visibleIds);
         setVisibleQuestionIds(activeQuestionIdentifiers);
-        console.log('Visibility updated:', { blocks: visibleIds.length, questions: activeQuestionIdentifiers.size });
     };
 
     const handleStart = async (e: React.FormEvent) => {

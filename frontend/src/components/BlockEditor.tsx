@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import QuestionEditor from './QuestionEditor';
 import { Button, Input } from './ui';
@@ -43,6 +42,7 @@ export default function BlockEditor({ block, index, onUpdate, onRemove, disabled
                 ...block.questions,
                 {
                     text: '',
+                    key: `qst_${Math.random().toString(36).substr(2, 9)}`,
                     type: 'text',
                     required: false,
                 },

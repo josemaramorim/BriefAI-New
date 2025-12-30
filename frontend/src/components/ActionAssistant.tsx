@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    availableBlocks?: { id: string; title: string }[];
+    availableBlocks?: { id: string; key?: string; title: string }[];
     availableQuestions?: { key: string; text: string }[];
     onInsertAction: (json: string) => void;
 }
@@ -105,7 +105,7 @@ export default function ActionAssistant({ open, onOpenChange, availableBlocks = 
                                     </SelectTrigger>
                                     <SelectContent>
                                         {availableBlocks.map(block => (
-                                            <SelectItem key={block.id} value={block.id}>{block.title || block.id}</SelectItem>
+                                            <SelectItem key={block.id} value={block.key || block.id}>{block.title || block.id}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
