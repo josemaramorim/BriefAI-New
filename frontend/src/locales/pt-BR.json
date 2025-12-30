@@ -40,8 +40,7 @@
         "copyLink": "Copiar Link",
         "viewResults": "Ver Resultados",
         "linkCopied": "Link Copiado!",
-        "linkCopiedDescription": "O link do briefing foi copiado para sua área de transferência."
-        ,
+        "linkCopiedDescription": "O link do briefing foi copiado para sua área de transferência.",
         "allowDraftResponses": "Permite respostas em rascunho"
     },
     "templateBuilder": {
@@ -74,8 +73,8 @@
         "loadError": "Erro ao carregar template",
         "openedForEdit": "Template aberto para edição. O status voltou para Rascunho.",
         "openForEditConfirm": "Deseja abrir este template para edição? Ele voltará ao estado de Rascunho e esta ação será auditada.",
-        "unlockEdit": "Abrir para Edição"
-        ,
+        "unlockEdit": "Abrir para Edição",
+        "unlockError": "Erro ao abrir template para edição",
         "allowDraftResponses": "Permitir respostas em rascunho",
         "allowDraftResponsesDesc": "Quando ativado, iniciar um briefing criará uma snapshot do template para vincular as respostas a uma versão estável."
     },

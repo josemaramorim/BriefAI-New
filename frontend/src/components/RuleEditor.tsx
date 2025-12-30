@@ -13,13 +13,19 @@ interface Rule {
     action: string;
 }
 
+interface TargetItem {
+    label: string;
+    value: string;
+    type: string;
+}
+
 interface RuleEditorProps {
     rule: Rule;
     index: number;
     onUpdate: (rule: Rule) => void;
     onRemove: () => void;
     disabled?: boolean;
-    availableKeys?: string[];
+    availableKeys?: TargetItem[];
     blocks?: { id?: string; title: string }[];
 }
 
@@ -40,7 +46,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
     const filtered = React.useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return keys;
-        return keys.filter((k) => k.toLowerCase().includes(q));
+        return keys.filter((k) => k.label.toLowerCase().includes(q) || k.value.toLowerCase().includes(q));
     }, [keys, search]);
 
     const insertAtCursor = (valueToInsert: string) => {
@@ -203,7 +209,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                             }
                             if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight((h) => Math.min(h + 1, filtered.length - 1)); }
                             else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
-                            else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); const v = filtered[highlight]; if (v) { formatAndInsert(v); setPickerOpen(false); setSearch(''); } }
+                            else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); const v = filtered[highlight]; if (v) { formatAndInsert(v.value); setPickerOpen(false); setSearch(''); } }
                             else if (e.key === 'Escape') { e.preventDefault(); setPickerOpen(false); }
                         }}
                         rows={4}
@@ -220,18 +226,18 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                                 <div className="flex items-center gap-2 relative">
                                     <div className="flex items-center gap-2">
                                         <button
-                                        type="button"
-                                        onClick={() => {
-                                            setPickerOpen((s) => !s);
-                                            setTimeout(() => searchRef.current?.focus(), 50);
-                                        }}
-                                        className="text-xs bg-muted/10 px-2 py-1 rounded"
-                                        aria-haspopup="listbox"
-                                        aria-expanded={pickerOpen}
-                                    >
-                                        {t('rule.insertKeyPlaceholder', 'Inserir chave...')}
-                                    </button>
-                                        <Button variant="secondary" size="sm" onClick={() => setAssistantOpen(true)} className="text-xs px-2 py-1" title={t('rule.assistantButton','Assistente')} aria-label={t('rule.assistantButton','Assistente')}>{t('rule.assistantButton','Assistente')}</Button>
+                                            type="button"
+                                            onClick={() => {
+                                                setPickerOpen((s) => !s);
+                                                setTimeout(() => searchRef.current?.focus(), 50);
+                                            }}
+                                            className="text-xs bg-muted/10 px-2 py-1 rounded"
+                                            aria-haspopup="listbox"
+                                            aria-expanded={pickerOpen}
+                                        >
+                                            {t('rule.insertKeyPlaceholder', 'Inserir chave...')}
+                                        </button>
+                                        <Button variant="secondary" size="sm" onClick={() => setAssistantOpen(true)} className="text-xs px-2 py-1" title={t('rule.assistantButton', 'Assistente')} aria-label={t('rule.assistantButton', 'Assistente')}>{t('rule.assistantButton', 'Assistente')}</Button>
                                     </div>
 
                                     {pickerOpen && (
@@ -244,7 +250,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                                                     if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight((h) => Math.min(h + 1, filtered.length - 1)); }
                                                     if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
                                                     if (e.key === 'Escape') { setPickerOpen(false); }
-                                                    if (e.key === 'Enter') { e.preventDefault(); const v = filtered[highlight]; if (v) { formatAndInsert(v); setPickerOpen(false); setSearch(''); } }
+                                                    if (e.key === 'Enter') { e.preventDefault(); const v = filtered[highlight]; if (v) { formatAndInsert(v.value); setPickerOpen(false); setSearch(''); } }
                                                 }}
                                                 className="w-full text-sm px-2 py-1 mb-2 border rounded"
                                                 placeholder={t('rule.searchPlaceholder', 'Pesquisar...')}
@@ -257,18 +263,18 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                                                 <ul role="listbox" aria-label={t('rule.insertKey')} className="space-y-1">
                                                     {filtered.slice(0, 200).map((k, i) => (
                                                         <li
-                                                            key={k}
+                                                            key={k.value}
                                                             role="option"
                                                             aria-selected={highlight === i}
                                                             onMouseEnter={() => setHighlight(i)}
-                                                            onClick={() => { formatAndInsert(k); setPickerOpen(false); setSearch(''); }}
+                                                            onClick={() => { formatAndInsert(k.value); setPickerOpen(false); setSearch(''); }}
                                                             className={`px-2 py-2 rounded cursor-pointer ${highlight === i ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/10'}`}
                                                         >
                                                             <div className="flex items-center justify-between">
-                                                                <div className="text-sm font-medium">{k}</div>
-                                                                <div className="text-[11px] text-muted-foreground">Preview</div>
+                                                                <div className="text-sm font-medium">{k.label}</div>
+                                                                <div className="text-[10px] uppercase bg-secondary px-1 rounded text-secondary-foreground">{k.type === 'block' ? 'Bloco' : 'Pergunta'}</div>
                                                             </div>
-                                                            <div className="text-xs text-muted-foreground mt-1 font-mono">{"{\"questionId\":\"" + k + "\"}"}</div>
+                                                            <div className="text-xs text-muted-foreground mt-1 font-mono">{k.value}</div>
                                                         </li>
                                                     ))}
                                                     {filtered.length === 0 && <li className="text-xs text-muted-foreground px-2">{t('rule.noResults', 'Nenhum resultado')}</li>}
@@ -280,7 +286,7 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                                     {/* small preview of popular keys (desktop) */}
                                     <div className="hidden md:flex flex-wrap gap-2">
                                         {keys.slice(0, 8).map(k => (
-                                            <button key={k} type="button" onClick={() => formatAndInsert(k)} className="text-xs bg-muted/20 px-2 py-1 rounded hover:bg-muted/30">{k}</button>
+                                            <button key={k.value} type="button" onClick={() => formatAndInsert(k.value)} className="text-xs bg-muted/20 px-2 py-1 rounded hover:bg-muted/30">{k.label}</button>
                                         ))}
                                         {keys.length > 8 && (
                                             <button type="button" onClick={() => setPickerOpen(true)} className="text-xs text-muted-foreground px-2 py-1">+{keys.length - 8}</button>
@@ -328,12 +334,12 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
                     </p>
                     <div className="pt-2">
                         <div className="flex items-center gap-2">
-                            <Button variant="secondary" size="sm" onClick={() => setActionAssistantOpen(true)} className="text-xs px-2 py-1" title={t('rule.assistantButton','Assistente')} aria-label={t('rule.assistantButton','Assistente')}>{t('rule.assistantButton','Assistente')}</Button>
+                            <Button variant="secondary" size="sm" onClick={() => setActionAssistantOpen(true)} className="text-xs px-2 py-1" title={t('rule.assistantButton', 'Assistente')} aria-label={t('rule.assistantButton', 'Assistente')}>{t('rule.assistantButton', 'Assistente')}</Button>
                             <ActionAssistant
                                 open={actionAssistantOpen}
                                 onOpenChange={setActionAssistantOpen}
                                 availableBlocks={Array.isArray(blocks) ? blocks.map(b => ({ id: b.id || '', title: b.title || '' })) : []}
-                                availableQuestions={Array.isArray(keys) ? keys.map(k => ({ key: k, text: k })) : []}
+                                availableQuestions={Array.isArray(keys) ? keys.map(k => ({ key: k.value, text: k.label })) : []}
                                 onInsertAction={(json) => onUpdate({ ...rule, action: json })}
                             />
                         </div>

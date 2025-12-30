@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from './ui/button';
 import AssistantBase from './AssistantBase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Input } from './ui/input';
@@ -17,6 +16,7 @@ interface Props {
 const actionTypes = [
     { value: 'activate_block', label: 'Ativar Bloco', params: ['targetId'] },
     { value: 'deactivate_block', label: 'Desativar Bloco', params: ['targetId'] },
+    { value: 'activate_question', label: 'Ativar Pergunta', params: ['targetId'] },
     { value: 'skip_question', label: 'Pular Pergunta', params: ['targetId'] },
     { value: 'set_metadata', label: 'Definir Metadados', params: ['key', 'value'] },
     { value: 'end_briefing', label: 'Encerrar Briefing', params: [] },
@@ -91,7 +91,7 @@ export default function ActionAssistant({ open, onOpenChange, availableBlocks = 
 
                 {selectedAction && selectedAction.params.map(param => {
                     let isBlockAction = actionType === 'activate_block' || actionType === 'deactivate_block';
-                    let isQuestionAction = actionType === 'skip_question';
+                    let isQuestionAction = actionType === 'skip_question' || actionType === 'activate_question';
                     return (
                         <div key={param} className="space-y-2">
                             <Label>{param}</Label>

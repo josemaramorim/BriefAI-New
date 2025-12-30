@@ -13,6 +13,7 @@ import { useToast } from '../hooks/use-toast';
 
 interface Block {
     id?: string
+    key?: string
     title: string
     description?: string
     order: number
@@ -56,7 +57,33 @@ const TemplateBuilder: React.FC = () => {
 
     const [blocks, setBlocks] = useState<Block[]>([])
     const [rules, setRules] = useState<Rule[]>([])
-    const [availableQuestionKeys, setAvailableQuestionKeys] = useState<string[]>([])
+
+    // Memoize available keys for rules (blocks and questions)
+    const availableTargetKeys = React.useMemo(() => {
+        const targets: { label: string; value: string; type: 'block' | 'question' }[] = []
+        blocks.forEach((b) => {
+            // Priority: Key > ID
+            const bVal = b.key || b.id
+            if (bVal) {
+                targets.push({
+                    label: b.title || `Bloco ${b.order + 1}`,
+                    value: bVal,
+                    type: 'block'
+                })
+            }
+            b.questions.forEach((q, qIdx) => {
+                const qVal = q.key || q.id
+                if (qVal) {
+                    targets.push({
+                        label: q.text || `Pergunta ${qIdx + 1}`,
+                        value: qVal,
+                        type: 'question'
+                    })
+                }
+            })
+        })
+        return targets
+    }, [blocks])
 
     useEffect(() => {
         const load = async () => {
@@ -72,14 +99,6 @@ const TemplateBuilder: React.FC = () => {
                 setBlocks(loadedBlocks)
                 setRules(tpl.rules || [])
                 setPublished(Boolean(tpl.published))
-
-                const keys: string[] = []
-                    ; (tpl.blocks || []).forEach((b: any) => {
-                        ; (b.questions || []).forEach((q: any) => {
-                            if (q.key) keys.push(q.key)
-                        })
-                    })
-                setAvailableQuestionKeys(keys)
             } catch (err) {
                 console.error(err)
                 toast({ title: t('templateBuilder.loadError') })
@@ -96,11 +115,11 @@ const TemplateBuilder: React.FC = () => {
             const payload = { name, description, allowDraftResponses, blocks, rules }
             if (!id || id === 'new') {
                 const res = await api.post('/templates', payload)
-                navigate(`/templates/${res.data.id}`)
+                navigate(`/templates/${res.data.templateId}`)
             } else {
                 await api.put(`/templates/${id}`, payload)
             }
-            toast({ title: t('templateBuilder.saved') })
+            toast({ title: t('templateBuilder.saveSuccess') })
         } catch (err) {
             console.error(err)
             toast({ title: t('templateBuilder.saveError') })
@@ -115,7 +134,7 @@ const TemplateBuilder: React.FC = () => {
             if (id && id !== 'new') {
                 await api.post(`/templates/${id}/publish`)
                 setPublished(true)
-                toast({ title: t('templateBuilder.published') })
+                toast({ title: t('templateBuilder.publishSuccess') })
             }
         } catch (err) {
             console.error(err)
@@ -131,7 +150,7 @@ const TemplateBuilder: React.FC = () => {
             if (id && id !== 'new') {
                 await api.post(`/templates/${id}/unlock`)
                 setPublished(false)
-                toast({ title: t('templateBuilder.unlocked') })
+                toast({ title: t('templateBuilder.openedForEdit') })
             }
         } catch (err) {
             console.error(err)
@@ -352,7 +371,7 @@ const TemplateBuilder: React.FC = () => {
                                         onUpdate={(updatedRule) => updateRule(index, updatedRule)}
                                         onRemove={() => removeRule(index)}
                                         disabled={published}
-                                        availableKeys={availableQuestionKeys}
+                                        availableKeys={availableTargetKeys}
                                         blocks={blocks}
                                     />
                                 ))}

@@ -60,6 +60,8 @@ model Template {
 model Block {
   id         String   @id @default(cuid())
   templateId String
+  // Human-editable key used for rule references. Generated from title when missing.
+  key        String?
   title      String
   description String?  // Objetivo ou descrição do bloco
   order      Int      @default(0)
@@ -72,6 +74,7 @@ model Block {
   children  Block[]    @relation("SubBlocks")
   questions Question[]
 
+  @@unique([templateId, key])
   @@map("blocks")
 }
 

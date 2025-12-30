@@ -6,11 +6,14 @@ import { Trash2, Plus } from 'lucide-react';
 
 interface Question {
     id?: string;
+    key?: string;
     text: string;
     type: string;
     required: boolean;
     placeholder?: string;
     options?: string[];
+    imageOptions?: any[];
+    imageChoiceConfig?: any;
 }
 
 interface Block {
@@ -60,6 +63,8 @@ export default function BlockEditor({ block, index, onUpdate, onRemove, disabled
         });
     };
 
+    const slugify = (s: string) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
     return (
         <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
             <div className="flex items-start gap-4">
@@ -84,6 +89,23 @@ export default function BlockEditor({ block, index, onUpdate, onRemove, disabled
                         onChange={(e) => onUpdate({ ...block, description: e.target.value })}
                         placeholder={t('block.descriptionPlaceholder', 'Descreva o objetivo deste bloco...')}
                         className="bg-background"
+                        disabled={disabled}
+                    />
+                </div>
+                <div className="w-[200px] space-y-2">
+                    <label className="text-sm font-semibold text-foreground">
+                        {t('block.key', 'Chave (ex: block-parking)')}
+                    </label>
+                    <Input
+                        value={(block as any).key || ''}
+                        onChange={(e) => onUpdate({ ...block, key: e.target.value } as any)}
+                        onBlur={(e) => {
+                            if (!e.target.value || e.target.value.trim() === '') {
+                                onUpdate({ ...block, key: slugify(block.title || `block-${index + 1}`) } as any);
+                            }
+                        }}
+                        placeholder="block-slug"
+                        className="bg-background font-mono text-xs"
                         disabled={disabled}
                     />
                 </div>

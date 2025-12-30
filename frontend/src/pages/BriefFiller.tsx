@@ -16,6 +16,7 @@ type Step = 'welcome' | 'filling' | 'completed';
 
 interface Question {
     id: string;
+    key?: string;
     text: string;
     type: string;
     required: boolean;
@@ -25,6 +26,7 @@ interface Question {
 
 interface Block {
     id: string;
+    key?: string;
     title: string;
     description?: string;
     order: number;
@@ -62,6 +64,7 @@ export default function BriefFiller() {
     const [responses, setResponses] = useState<Record<string, any>>({});
     const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
     const [visibleBlockIds, setVisibleBlockIds] = useState<string[]>([]);
+    const [visibleQuestionIds, setVisibleQuestionIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         if (templateId) {
@@ -164,37 +167,60 @@ export default function BriefFiller() {
     const evaluateRules = () => {
         if (!templateInfo || !templateInfo.blocks) return;
 
-        // Start with all non-conditional blocks (logic can vary, but let's assume all are visible unless hidden)
-        // Or better: Process rules to hide/show
-        const activeBlockIds = new Set(templateInfo.blocks.map(b => b.id));
+        // All active items (initialize with both IDs and Keys)
+        const activeBlockIdentifiers = new Set<string>();
+        const activeQuestionIdentifiers = new Set<string>();
+
+        templateInfo.blocks.forEach(b => {
+            activeBlockIdentifiers.add(b.id);
+            if (b.key) activeBlockIdentifiers.add(b.key);
+            b.questions.forEach(q => {
+                activeQuestionIdentifiers.add(q.id);
+                if (q.key) activeQuestionIdentifiers.add(q.key);
+            });
+        });
 
         (templateInfo.rules || []).forEach(rule => {
             try {
                 const condition = JSON.parse(rule.expression);
                 const action = JSON.parse(rule.action);
 
-                const answer = responses[condition.questionId];
-                let isMatch = false;
+                // Find the answer using either questionId or q.key
+                let answer = responses[condition.questionId];
 
-                if (condition.operator === '=') {
-                    // For single choice or text
-                    isMatch = answer === condition.value;
-                } else if (condition.operator === '!=') {
-                    isMatch = answer !== condition.value;
-                } else if (condition.operator === 'contains') {
-                    // Handle array values (multiselect or multiple image choice)
-                    if (Array.isArray(answer)) {
-                        isMatch = answer.includes(condition.value);
-                    } else if (typeof answer === 'string') {
-                        isMatch = answer.includes(condition.value);
+                const isMatch = (val: any) => {
+                    if (condition.operator === '=') return val === condition.value;
+                    if (condition.operator === '!=') return val !== condition.value;
+
+                    const numAnswer = parseFloat(val);
+                    const numValue = parseFloat(condition.value);
+                    const isNumeric = !isNaN(numAnswer) && !isNaN(numValue);
+
+                    if (condition.operator === '>') return isNumeric && numAnswer > numValue;
+                    if (condition.operator === '<') return isNumeric && numAnswer < numValue;
+                    if (condition.operator === '>=') return isNumeric && numAnswer >= numValue;
+                    if (condition.operator === '<=') return isNumeric && numAnswer <= numValue;
+
+                    if (condition.operator === 'contains') {
+                        if (Array.isArray(val)) return val.includes(condition.value);
+                        if (typeof val === 'string') return val.includes(condition.value);
                     }
-                }
+                    return false;
+                };
 
-                console.log(`[Rules] Evaluating Rule: ${condition.questionId} ${condition.operator} ${condition.value} | Answer: ${JSON.stringify(answer)} | Match: ${isMatch}`);
+                const matched = isMatch(answer);
+
+                console.log(`[Rules] Evaluating Rule: ${condition.questionId} ${condition.operator} ${condition.value} | Answer: ${JSON.stringify(answer)} | Match: ${matched}`);
 
                 if (action.type === 'activate_block') {
-                    if (!isMatch) {
-                        activeBlockIds.delete(action.targetId || action.blockId);
+                    const targetId = action.targetId || action.blockId;
+                    if (!matched) {
+                        activeBlockIdentifiers.delete(targetId);
+                    }
+                } else if (action.type === 'activate_question') {
+                    const targetId = action.targetId || action.questionId;
+                    if (!matched) {
+                        activeQuestionIdentifiers.delete(targetId);
                     }
                 }
             } catch (e) {
@@ -202,13 +228,14 @@ export default function BriefFiller() {
             }
         });
 
-        const sortedIds = templateInfo.blocks
-            .filter(b => activeBlockIds.has(b.id))
+        const visibleIds = templateInfo.blocks
+            .filter(b => activeBlockIdentifiers.has(b.id))
             .sort((a, b) => a.order - b.order)
             .map(b => b.id);
 
-        setVisibleBlockIds(sortedIds);
-        console.log('Blocos visíveis após avaliação das regras:', sortedIds); // Adicionado para depuração
+        setVisibleBlockIds(visibleIds);
+        setVisibleQuestionIds(activeQuestionIdentifiers);
+        console.log('Visibility updated:', { blocks: visibleIds.length, questions: activeQuestionIdentifiers.size });
     };
 
     const handleStart = async (e: React.FormEvent) => {
@@ -458,14 +485,16 @@ export default function BriefFiller() {
                         </div>
 
                         <div className="space-y-12">
-                            {currentBlock.questions.map((q) => (
-                                <QuestionRenderer
-                                    key={q.id}
-                                    question={q}
-                                    value={responses[q.id]}
-                                    onChange={(value) => handleAnswerChange(q.id, value)}
-                                />
-                            ))}
+                            {currentBlock.questions
+                                .filter(q => visibleQuestionIds.has(q.id))
+                                .map((q) => (
+                                    <QuestionRenderer
+                                        key={q.id}
+                                        question={q}
+                                        value={responses[q.id]}
+                                        onChange={(value) => handleAnswerChange(q.id, value)}
+                                    />
+                                ))}
                         </div>
 
                         <div className="flex items-center justify-between pt-12 border-t mt-16 pb-20">

@@ -5,10 +5,16 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import AssistantBase from './AssistantBase';
 
+interface TargetItem {
+  label: string;
+  value: string;
+  type: string; // 'block' | 'question'
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  availableKeys: string[];
+  availableKeys: TargetItem[];
   onInsertAction: (json: string) => void;
 }
 
@@ -34,7 +40,8 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return availableKeys;
-    return availableKeys.filter((k) => k.toLowerCase().includes(q));
+    return availableKeys
+      .filter((k) => k.label.toLowerCase().includes(q) || k.value.toLowerCase().includes(q));
   }, [availableKeys, search]);
 
   const handleInsert = () => {
@@ -65,59 +72,70 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
         <div className="space-y-2">
           <Label>{t('rule.chooseKey', 'Escolha a variável')}</Label>
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('rule.searchPlaceholder', 'Pesquisar...')} />
-              <div className="max-h-40 overflow-auto mt-2 border rounded p-2">
-                {filtered.map((k) => (
-                  <div key={k} className={`p-2 rounded cursor-pointer ${selectedKey === k ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/10'}`} onClick={() => setSelectedKey(k)}>
-                    <div className="font-medium">{k}</div>
-                    <div className="text-xs text-muted-foreground mt-1 font-mono">{"{\"questionId\":\"" + k + "\"}"}</div>
-                  </div>
-                ))}
-                {filtered.length === 0 && <div className="text-xs text-muted-foreground">{t('rule.noResults', 'Nenhum resultado')}</div>}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-2">
-              <Label>{t('rule.chooseOperator', 'Escolha o operador')}</Label>
-              <select
-                value={operator}
-                onChange={(e) => setOperator(e.target.value)}
-                className="w-full rounded border px-2 py-1 bg-card text-card-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+          <div className="max-h-40 overflow-auto mt-2 border rounded p-2">
+            {filtered.map((item) => (
+              <div
+                key={item.value}
+                className={`p-2 rounded cursor-pointer ${selectedKey === item.value ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/10'} border-b last:border-0`}
+                onClick={() => setSelectedKey(item.value)}
               >
-                <option value="equals">{t('operator.equals', 'Igual a')}</option>
-                <option value="not_equals">{t('operator.notEquals', 'Diferente de')}</option>
-                <option value="contains">{t('operator.contains', 'Contém')}</option>
-                <option value="gt">{t('operator.gt', 'Maior que')}</option>
-                <option value="lt">{t('operator.lt', 'Menor que')}</option>
-              </select>
-              <Label>{t('rule.enterValue', 'Valor')}</Label>
-              <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t('rule.valuePlaceholder', 'Digite um valor')} />
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-2">
-              <Label>{t('rule.preview', 'Pré-visualização')}</Label>
-              <div className="bg-muted/10 p-2 rounded font-mono text-sm">
-                {JSON.stringify({ questionId: selectedKey, operator, value }, null, 2)}
+                <div className="flex justify-between items-center">
+                  <div className="font-medium text-sm">{item.label}</div>
+                  <div className="text-[10px] uppercase bg-secondary px-1 rounded text-secondary-foreground">{item.type === 'block' ? 'Bloco' : 'Pergunta'}</div>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5 font-mono truncate" title={item.value}>
+                  {item.value}
+                </div>
               </div>
-              <Label className="mt-2">{t('rule.summary', 'Resumo')}</Label>
-              <div className="text-sm text-muted-foreground">
-                {selectedKey} {operator} "{value}"
-              </div>
-            </div>
-          )}
-
-        <div className="flex items-center gap-2 w-full mt-4">
-          <div className="flex-1">
-            {/* Botões de navegação de passo */}
-          </div>
-          <div className="flex gap-2">
-            {step > 1 && <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>{t('action.back', 'Voltar')}</Button>}
-            {step < 3 && <Button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && !selectedKey}>{t('action.next', 'Próximo')}</Button>}
+            ))}
+            {filtered.length === 0 && <div className="text-xs text-muted-foreground">{t('rule.noResults', 'Nenhum resultado')}</div>}
           </div>
         </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-2">
+          <Label>{t('rule.chooseOperator', 'Escolha o operador')}</Label>
+          <select
+            value={operator}
+            onChange={(e) => setOperator(e.target.value)}
+            className="w-full rounded border px-2 py-1 bg-card text-card-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+          >
+            <option value="=">{t('operator.equals', 'Igual a')}</option>
+            <option value="!=">{t('operator.notEquals', 'Diferente de')}</option>
+            <option value="contains">{t('operator.contains', 'Contém')}</option>
+            <option value=">">{t('operator.gt', 'Maior que')}</option>
+            <option value="<">{t('operator.lt', 'Menor que')}</option>
+            <option value=">=">{t('operator.gte', 'Maior ou igual a')}</option>
+            <option value="<=">{t('operator.lte', 'Menor ou igual a')}</option>
+          </select>
+          <Label>{t('rule.enterValue', 'Valor')}</Label>
+          <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t('rule.valuePlaceholder', 'Digite um valor')} />
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-2">
+          <Label>{t('rule.preview', 'Pré-visualização')}</Label>
+          <div className="bg-muted/10 p-2 rounded font-mono text-sm">
+            {JSON.stringify({ questionId: selectedKey, operator, value }, null, 2)}
+          </div>
+          <Label className="mt-2">{t('rule.summary', 'Resumo')}</Label>
+          <div className="text-sm text-muted-foreground">
+            {selectedKey} {operator} "{value}"
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 w-full mt-4">
+        <div className="flex-1">
+          {/* Botões de navegação de passo */}
+        </div>
+        <div className="flex gap-2">
+          {step > 1 && <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>{t('action.back', 'Voltar')}</Button>}
+          {step < 3 && <Button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && !selectedKey}>{t('action.next', 'Próximo')}</Button>}
+        </div>
+      </div>
     </AssistantBase>
   );
 }

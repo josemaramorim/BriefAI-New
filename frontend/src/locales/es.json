@@ -28,8 +28,7 @@
         "viewDetails": "Ver detalles",
         "published": "Publicado",
         "draft": "Borrador",
-        "loading": "Cargando plantillas..."
-        ,
+        "loading": "Cargando plantillas...",
         "allowDraftResponses": "Permitir respuestas en borrador"
     },
     "templateBuilder": {
@@ -62,8 +61,8 @@
         "loadError": "Error al cargar la plantilla",
         "openedForEdit": "Plantilla abierta para editar. El estado volvió a Borrador.",
         "openForEditConfirm": "¿Desea abrir esta plantilla para editar? Volverá al estado de Borrador e esta acción será auditada.",
-        "unlockEdit": "Abrir para Edición"
-        ,
+        "unlockEdit": "Abrir para Edición",
+        "unlockError": "Error al abrir la plantilla para editar",
         "allowDraftResponses": "Permitir respuestas en borrador",
         "allowDraftResponsesDesc": "Cuando está habilitado, iniciar un briefing creará una snapshot de la plantilla para vincular las respuestas a una versión estable."
     },

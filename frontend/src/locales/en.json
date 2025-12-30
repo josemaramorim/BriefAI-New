@@ -30,8 +30,7 @@
         "copyLink": "Copy Link",
         "viewResults": "View Results",
         "linkCopied": "Link Copied!",
-        "linkCopiedDescription": "The briefing link has been copied to your clipboard."
-        ,
+        "linkCopiedDescription": "The briefing link has been copied to your clipboard.",
         "allowDraftResponses": "Allow draft responses"
     },
     "templateBuilder": {
@@ -64,8 +63,8 @@
         "loadError": "Error loading template",
         "openedForEdit": "Template opened for editing. Status changed back to Draft.",
         "openForEditConfirm": "Do you want to open this template for editing? It will return to Draft state and this action will be audited.",
-        "unlockEdit": "Open for Editing"
-        ,
+        "unlockEdit": "Open for Editing",
+        "unlockError": "Error opening template for editing",
         "allowDraftResponses": "Allow draft responses",
         "allowDraftResponsesDesc": "When enabled, starting a brief will snapshot the template so responses are tied to a stable version."
     },
