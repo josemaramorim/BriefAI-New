@@ -39,9 +39,8 @@ declare global {
 
 // Configuração do provider de armazenamento de imagens
 const IMAGE_STORAGE_PROVIDER = process.env.IMAGE_STORAGE_PROVIDER || 'local';
-const LOCAL_IMAGES_PATH = process.env.LOCAL_IMAGES_PATH
-  ? path.resolve(process.env.LOCAL_IMAGES_PATH)
-  : path.join(__dirname, '..', 'briefs');
+const LOCAL_IMAGES_PATH = path.resolve(process.env.LOCAL_IMAGES_PATH || path.join(__dirname, '..', 'briefs'));
+console.log(`[Backend] LOCAL_IMAGES_PATH: ${LOCAL_IMAGES_PATH}`);
 console.log(`Image storage configured: provider=${IMAGE_STORAGE_PROVIDER}, path=${LOCAL_IMAGES_PATH}`);
 let upload: ReturnType<typeof multer>;
 if (IMAGE_STORAGE_PROVIDER === 'local') {
@@ -75,24 +74,31 @@ app.post('/upload', authMiddleware, requireRole('Admin', 'Editor'), upload.singl
     if (!templateId) {
       return res.status(400).json({ error: 'Missing templateId in request body' });
     }
-    const dir = path.join(LOCAL_IMAGES_PATH, templateId, 'images');
-    console.log(`[/upload] Finalizing upload to: ${dir}`);
-    fs.mkdirSync(dir, { recursive: true });
 
-    const destPath = path.join(dir, req.file.filename);
-    if (req.file.path !== destPath) {
+    // Normalize path for consistent behavior
+    const targetDir = path.join(LOCAL_IMAGES_PATH, templateId, 'images');
+    console.log(`[/upload] Target directory: ${targetDir}`);
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    const destPath = path.join(targetDir, req.file.filename);
+    const sourcePath = req.file.path;
+
+    if (sourcePath !== destPath) {
+      console.log(`[/upload] Moving file from ${sourcePath} to ${destPath}`);
       try {
-        fs.renameSync(req.file.path, destPath);
+        fs.renameSync(sourcePath, destPath);
       } catch (err) {
-        // Fallback para quando é entre drives diferentes (EXDEV)
-        console.warn('Rename failed, trying copy/unlink fallback:', err);
-        fs.copyFileSync(req.file.path, destPath);
-        fs.unlinkSync(req.file.path);
+        console.warn('[/upload] Rename failed, trying copy/unlink fallback:', err);
+        fs.copyFileSync(sourcePath, destPath);
+        fs.unlinkSync(sourcePath);
       }
     }
+
     const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
+    console.log(`[/upload] Success! URL: ${fileUrl}`);
     res.status(201).json({ url: fileUrl, filename: req.file.filename });
   } catch (e) {
+    console.error('[/upload] Error:', e);
     res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
   }
 });
@@ -103,10 +109,29 @@ app.post('/templates/:id/images', authMiddleware, requireRole('Admin', 'Editor')
       return res.status(400).json({ error: 'No file uploaded' });
     }
     const templateId = req.params.id;
+
+    // Note: Multer's diskStorage should have already placed the file in the correct dir if :id was available.
+    // However, if it fell back to "unknown", we move it here.
+    const targetDir = path.join(LOCAL_IMAGES_PATH, templateId, 'images');
+    const destPath = path.join(targetDir, req.file.filename);
+    const sourcePath = req.file.path;
+
+    if (sourcePath !== destPath) {
+      console.log(`[/templates/:id/images] Moving file from ${sourcePath} to ${destPath}`);
+      fs.mkdirSync(targetDir, { recursive: true });
+      try {
+        fs.renameSync(sourcePath, destPath);
+      } catch (err) {
+        fs.copyFileSync(sourcePath, destPath);
+        fs.unlinkSync(sourcePath);
+      }
+    }
+
     const fileUrl = `/briefs/${templateId}/images/${req.file.filename}`;
-    console.log(`[/templates/:id/images] Uploaded image for ${templateId}: ${fileUrl}`);
+    console.log(`[/templates/:id/images] Success! URL: ${fileUrl}`);
     res.status(201).json({ url: fileUrl, filename: req.file.filename });
   } catch (e) {
+    console.error('[/templates/:id/images] Error:', e);
     res.status(500).json({ error: 'Image upload failed', details: (e as Error).message });
   }
 });
@@ -174,7 +199,12 @@ i18n.configure({
   header: 'accept-language'
 });
 
-app.use('/briefs', express.static(LOCAL_IMAGES_PATH));
+console.log(`[Static] Serving /briefs from: ${LOCAL_IMAGES_PATH}`);
+app.use('/briefs', (req, res, next) => {
+  const fullPath = path.join(LOCAL_IMAGES_PATH, req.url);
+  console.log(`[Static] Request: ${req.url} -> ${fullPath}`);
+  next();
+}, express.static(LOCAL_IMAGES_PATH));
 
 // Helper to determine locale from request
 function getLocale(req: Request): string {

@@ -28,6 +28,8 @@ interface Question {
     required: boolean
     placeholder?: string
     options?: string[]
+    imageOptions?: any[]
+    imageChoiceConfig?: any
 }
 
 interface Rule {
@@ -72,11 +74,11 @@ const TemplateBuilder: React.FC = () => {
                 setPublished(Boolean(tpl.published))
 
                 const keys: string[] = []
-                ;(tpl.blocks || []).forEach((b: any) => {
-                    ;(b.questions || []).forEach((q: any) => {
-                        if (q.key) keys.push(q.key)
+                    ; (tpl.blocks || []).forEach((b: any) => {
+                        ; (b.questions || []).forEach((q: any) => {
+                            if (q.key) keys.push(q.key)
+                        })
                     })
-                })
                 setAvailableQuestionKeys(keys)
             } catch (err) {
                 console.error(err)
@@ -274,91 +276,91 @@ const TemplateBuilder: React.FC = () => {
             </Card>
 
             <div className="space-y-8">
-                    {/* Blocks */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                            <div>
-                                <CardTitle>{t('templateBuilder.blocksAndQuestions')}</CardTitle>
-                                <CardDescription>{t('templateBuilder.blocksDescription', 'Gerencie as seções e perguntas do seu template.')}</CardDescription>
+                {/* Blocks */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <div>
+                            <CardTitle>{t('templateBuilder.blocksAndQuestions')}</CardTitle>
+                            <CardDescription>{t('templateBuilder.blocksDescription', 'Gerencie as seções e perguntas do seu template.')}</CardDescription>
+                        </div>
+                        <Button onClick={addBlock} size="sm" disabled={published}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            {t('templateBuilder.addBlock')}
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {blocks.length === 0 ? (
+                            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                                <FileText className="mx-auto h-8 w-8 text-muted-foreground opacity-50" />
+                                <p className="mt-2 text-sm text-muted-foreground">{t('templateBuilder.noBlocks')}</p>
+                                <Button onClick={addBlock} variant="outline" size="sm" className="mt-4" disabled={published}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {t('templateBuilder.addBlock')}
+                                </Button>
                             </div>
-                            <Button onClick={addBlock} size="sm" disabled={published}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('templateBuilder.addBlock')}
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {blocks.length === 0 ? (
-                                <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                    <FileText className="mx-auto h-8 w-8 text-muted-foreground opacity-50" />
-                                    <p className="mt-2 text-sm text-muted-foreground">{t('templateBuilder.noBlocks')}</p>
-                                    <Button onClick={addBlock} variant="outline" size="sm" className="mt-4" disabled={published}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        {t('templateBuilder.addBlock')}
-                                    </Button>
-                                </div>
-                            ) : (
-                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
-                                    const { active, over } = e
-                                    if (!over || active.id === over.id) return
+                        ) : (
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => {
+                                const { active, over } = e
+                                if (!over || active.id === over.id) return
 
-                                    setBlocks((items) => {
-                                        const oldIndex = items.findIndex((item) => item.id === active.id)
-                                        const newIndex = items.findIndex((item) => item.id === over.id)
-                                        if (oldIndex === -1 || newIndex === -1) return items
+                                setBlocks((items) => {
+                                    const oldIndex = items.findIndex((item) => item.id === active.id)
+                                    const newIndex = items.findIndex((item) => item.id === over.id)
+                                    if (oldIndex === -1 || newIndex === -1) return items
 
-                                        const next = arrayMove(items, oldIndex, newIndex)
-                                        next.forEach((b, i) => (b.order = i)) // Update order
-                                        return next
-                                    })
-                                }}>
-                                    <SortableContext items={blocks.map(b => b.id!)} strategy={verticalListSortingStrategy}>
-                                        <div className="space-y-4">
-                                            {blocks.map((block, index) => (
-                                                <SortableBlock key={block.id} id={block.id!} index={index} block={block} onUpdate={(updatedBlock: Block) => updateBlock(index, updatedBlock)} onRemove={() => removeBlock(index)} disabled={published} />
-                                            ))}
-                                        </div>
-                                    </SortableContext>
-                                </DndContext>
-                            )}
-                        </CardContent>
-                    </Card>
+                                    const next = arrayMove(items, oldIndex, newIndex)
+                                    next.forEach((b, i) => (b.order = i)) // Update order
+                                    return next
+                                })
+                            }}>
+                                <SortableContext items={blocks.map(b => b.id!)} strategy={verticalListSortingStrategy}>
+                                    <div className="space-y-4">
+                                        {blocks.map((block, index) => (
+                                            <SortableBlock key={block.id} id={block.id!} index={index} block={block} onUpdate={(updatedBlock: Block) => updateBlock(index, updatedBlock)} onRemove={() => removeBlock(index)} disabled={published} />
+                                        ))}
+                                    </div>
+                                </SortableContext>
+                            </DndContext>
+                        )}
+                    </CardContent>
+                </Card>
 
-                    {/* Rules */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                            <div>
-                                <CardTitle>{t('templateBuilder.conditionalRules')}</CardTitle>
-                                <CardDescription>{t('templateBuilder.rulesDescription')}</CardDescription>
+                {/* Rules */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <div>
+                            <CardTitle>{t('templateBuilder.conditionalRules')}</CardTitle>
+                            <CardDescription>{t('templateBuilder.rulesDescription')}</CardDescription>
+                        </div>
+                        <Button onClick={addRule} size="sm" variant="secondary" disabled={published}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            {t('templateBuilder.addRule')}
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {rules.length === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                <p className="text-sm text-muted-foreground">{t('templateBuilder.noRules')}</p>
                             </div>
-                            <Button onClick={addRule} size="sm" variant="secondary" disabled={published}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                {t('templateBuilder.addRule')}
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {rules.length === 0 ? (
-                                <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                                    <p className="text-sm text-muted-foreground">{t('templateBuilder.noRules')}</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {rules.map((rule, index) => (
-                                        <RuleEditor
-                                            key={index}
-                                            rule={rule}
-                                            index={index}
-                                            onUpdate={(updatedRule) => updateRule(index, updatedRule)}
-                                            onRemove={() => removeRule(index)}
-                                            disabled={published}
-                                            availableKeys={availableQuestionKeys}
-                                            blocks={blocks}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                        ) : (
+                            <div className="space-y-4">
+                                {rules.map((rule, index) => (
+                                    <RuleEditor
+                                        key={index}
+                                        rule={rule}
+                                        index={index}
+                                        onUpdate={(updatedRule) => updateRule(index, updatedRule)}
+                                        onRemove={() => removeRule(index)}
+                                        disabled={published}
+                                        availableKeys={availableQuestionKeys}
+                                        blocks={blocks}
+                                    />
+                                ))}
+                            </div>
+                        )}
 
-                        </CardContent>
-                    </Card>
+                    </CardContent>
+                </Card>
 
 
             </div>

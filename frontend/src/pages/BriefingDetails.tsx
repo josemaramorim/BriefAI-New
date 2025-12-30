@@ -1,12 +1,12 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../lib/api';
+import api, { resolveImageUrl } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import { Mail, Calendar, FileText, ArrowLeft } from 'lucide-react';
+import { ModeToggle } from '../components/mode-toggle';
 
 interface Question {
     id: string;
@@ -88,29 +88,28 @@ export default function BriefingDetails() {
             );
         }
 
-        if (type === 'image_choice' && Array.isArray(value)) {
-            const resolveImageUrl = (url: string) => {
-                if (!url) return '';
-                if (url.startsWith('http')) return url;
-                return `http://localhost:3001${url.startsWith('/') ? '' : '/'}${url}`;
-            };
+        if (type === 'image_choice') {
+            const images = Array.isArray(value) ? value : [value];
 
             return (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
-                    {value.map((url: string, i: number) => (
-                        <div key={i} className="flex flex-col items-center p-2 border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
-                            <img
-                                src={resolveImageUrl(url)}
-                                alt={`Seleção ${i + 1}`}
-                                className="w-full h-24 object-cover rounded-lg"
-                            />
-                        </div>
-                    ))}
+                    {images.map((url: any, i: number) => {
+                        if (typeof url !== 'string') return null;
+                        return (
+                            <div key={i} className="flex flex-col items-center p-2 border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+                                <img
+                                    src={resolveImageUrl(url)}
+                                    alt={`Seleção ${i + 1}`}
+                                    className="w-full h-24 object-cover rounded-lg"
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
             );
         }
 
-        return <span className="text-slate-700 whitespace-pre-wrap">{value.toString()}</span>;
+        return <span className="text-foreground whitespace-pre-wrap">{value.toString()}</span>;
     };
 
     if (loading) {
@@ -144,7 +143,7 @@ export default function BriefingDetails() {
                                 {data.status === 'completed' ? 'Concluído' : 'Rascunho'}
                             </Badge>
                         </div>
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
                             {data.user?.name}
                         </h1>
                         <div className="flex items-center gap-4 text-muted-foreground">
@@ -152,26 +151,29 @@ export default function BriefingDetails() {
                             <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {new Date(data.updatedAt).toLocaleDateString()}</span>
                         </div>
                     </div>
-                    <Button variant="outline" className="gap-2" onClick={() => window.print()}>
-                        <FileText className="h-4 w-4" />
-                        Imprimir / PDF
-                    </Button>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <ModeToggle />
+                        <Button variant="outline" className="gap-2 flex-1 md:flex-none" onClick={() => window.print()}>
+                            <FileText className="h-4 w-4" />
+                            Imprimir / PDF
+                        </Button>
+                    </div>
                 </div>
             </div>
 
             <div className="grid gap-8">
                 {data.structure?.blocks.map((block) => (
-                    <Card key={block.id} className="border-slate-200 overflow-hidden shadow-sm">
-                        <CardHeader className="bg-slate-50 border-b">
-                            <CardTitle className="text-xl font-bold text-slate-800">{block.title}</CardTitle>
+                    <Card key={block.id} className="border-border overflow-hidden shadow-sm">
+                        <CardHeader className="bg-muted/50 border-b">
+                            <CardTitle className="text-xl font-bold text-foreground">{block.title}</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-border">
                                 {block.questions.map((question) => {
                                     const response = data.responses.find(r => r.questionId === question.id);
                                     return (
-                                        <div key={question.id} className="p-6 space-y-2 hover:bg-slate-50/50 transition-colors">
-                                            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+                                        <div key={question.id} className="p-6 space-y-2 hover:bg-accent/50 transition-colors">
+                                            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                                                 {question.text}
                                             </p>
                                             <div className="text-lg">

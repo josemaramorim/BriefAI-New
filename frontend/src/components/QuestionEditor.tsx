@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, Checkbox, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui';
-import api from '../lib/api';
+import api, { resolveImageUrl } from '../lib/api';
 import { X, Plus, Upload } from 'lucide-react';
 
 interface ImageOption {
@@ -362,7 +362,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                         </Button>
                                         {imgOpt.url && (
                                             <img
-                                                src={imgOpt.url}
+                                                src={resolveImageUrl(imgOpt.url)}
                                                 alt={imgOpt.label || ''}
                                                 className="h-10 w-10 object-cover rounded border flex-shrink-0"
                                             />

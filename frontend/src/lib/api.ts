@@ -50,4 +50,11 @@ export const uploadImage = async (file: File): Promise<string> => {
     return response.data.url;
 };
 
+export const resolveImageUrl = (url: string | null | undefined): string => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = 'http://localhost:3001';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default api;

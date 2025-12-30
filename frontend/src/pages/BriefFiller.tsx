@@ -1,6 +1,5 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -11,6 +10,7 @@ import { useToast } from '../hooks/use-toast';
 import api from '../lib/api';
 import QuestionRenderer from '../components/QuestionRenderer';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { ModeToggle } from '../components/mode-toggle';
 
 type Step = 'welcome' | 'filling' | 'completed';
 
@@ -299,21 +299,22 @@ export default function BriefFiller() {
 
     if (step === 'welcome') {
         return (
-            <div className="min-h-screen bg-[slate-50] flex items-center justify-center p-4 sm:p-8 overflow-hidden relative">
-                <div className="absolute top-4 right-4 z-20">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-8 overflow-hidden relative">
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                    <ModeToggle />
                     <LanguageSwitcher />
                 </div>
                 {/* Decorative Elements */}
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
 
-                <Card className="max-w-xl w-full border-none shadow-2xl bg-white/80 backdrop-blur-xl animate-in fade-in zoom-in duration-700">
-                    <CardHeader className="text-center space-y-4 pt-10 pb-6 border-b border-slate-100">
+                <Card className="max-w-xl w-full border-none shadow-2xl bg-card/80 backdrop-blur-xl animate-in fade-in zoom-in duration-700">
+                    <CardHeader className="text-center space-y-4 pt-10 pb-6 border-b border-border/50">
                         <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-2">
                             <Sparkles className="w-8 h-8 text-primary animate-pulse" />
                         </div>
                         <div>
-                            <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
+                            <CardTitle className="text-3xl font-bold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
                                 {templateInfo?.name || t('filler.welcome.title')}
                             </CardTitle>
                             <CardDescription className="text-base mt-3 max-w-sm mx-auto leading-relaxed">
@@ -326,7 +327,7 @@ export default function BriefFiller() {
                         <form onSubmit={handleStart} className="space-y-6">
                             <div className="space-y-5">
                                 <div className="space-y-2">
-                                    <Label htmlFor="customer-name" className="text-sm font-medium text-slate-700 ml-1">
+                                    <Label htmlFor="customer-name" className="text-sm font-medium text-foreground/80 ml-1">
                                         {t('filler.welcome.nameLabel')}
                                     </Label>
                                     <Input
@@ -334,12 +335,12 @@ export default function BriefFiller() {
                                         placeholder={t('filler.welcome.namePlaceholder')}
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="h-12 bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all text-lg rounded-xl"
+                                        className="h-12 bg-background border-input focus:border-primary focus:ring-primary/20 transition-all text-lg rounded-xl"
                                         required
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="customer-email" className="text-sm font-medium text-slate-700 ml-1">
+                                    <Label htmlFor="customer-email" className="text-sm font-medium text-foreground/80 ml-1">
                                         {t('filler.welcome.emailLabel')}
                                     </Label>
                                     <Input
@@ -348,7 +349,7 @@ export default function BriefFiller() {
                                         placeholder={t('filler.welcome.emailPlaceholder')}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="h-12 bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all text-lg rounded-xl"
+                                        className="h-12 bg-background border-input focus:border-primary focus:ring-primary/20 transition-all text-lg rounded-xl"
                                         required
                                     />
                                 </div>
@@ -370,7 +371,7 @@ export default function BriefFiller() {
                             </Button>
                         </form>
 
-                        <div className="flex items-center justify-center gap-6 pt-4 border-t border-slate-100 text-slate-400">
+                        <div className="flex items-center justify-center gap-6 pt-4 border-t border-border text-muted-foreground">
                             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                 {t('filler.welcome.safeAndPrivate')}
@@ -383,7 +384,7 @@ export default function BriefFiller() {
                     </CardContent>
                 </Card>
 
-                <p className="absolute bottom-8 left-0 right-0 text-center text-slate-400 text-sm font-medium">
+                <p className="absolute bottom-8 left-0 right-0 text-center text-muted-foreground text-sm font-medium">
                     Powered by <span className="text-primary font-bold">BriefAI</span>
                 </p>
             </div>
@@ -392,19 +393,20 @@ export default function BriefFiller() {
 
     if (step === 'completed') {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8 relative">
-                <div className="absolute top-4 right-4 z-20">
+            <div className="min-h-screen bg-background flex items-center justify-center p-8 relative">
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                    <ModeToggle />
                     <LanguageSwitcher />
                 </div>
-                <Card className="max-w-md w-full text-center p-12 border-none shadow-2xl bg-white rounded-3xl animate-in zoom-in duration-500">
-                    <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                <Card className="max-w-md w-full text-center p-12 border-none shadow-2xl bg-card rounded-3xl animate-in zoom-in duration-500">
+                    <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('filler.completed.title')}</h2>
-                    <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+                    <h2 className="text-3xl font-bold text-foreground mb-4">{t('filler.completed.title')}</h2>
+                    <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                         {t('filler.completed.description', { name })}
                     </p>
-                    <div className="p-4 bg-slate-50 rounded-2xl text-slate-400 text-xs font-medium uppercase tracking-widest">
+                    <div className="p-4 bg-muted/50 rounded-2xl text-muted-foreground text-xs font-medium uppercase tracking-widest">
                         {t('filler.completed.notified')}
                     </div>
                 </Card>
@@ -413,26 +415,27 @@ export default function BriefFiller() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col">
+        <div className="min-h-screen bg-background flex flex-col">
             {/* Header filling state */}
-            <header className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
+            <header className="bg-background/80 backdrop-blur-md border-b sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                         <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-slate-900 leading-tight">
+                        <h1 className="font-bold text-foreground leading-tight">
                             {templateInfo?.name}
                         </h1>
-                        <p className="text-xs text-slate-500 font-medium">{t('filler.header.respondingAs')} <span className="text-primary">{name}</span></p>
+                        <p className="text-xs text-muted-foreground font-medium">{t('filler.header.respondingAs')} <span className="text-primary">{name}</span></p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    <ModeToggle />
                     <LanguageSwitcher />
-                    <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block" />
+                    <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
                     <div className="hidden sm:flex flex-col items-end gap-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t('filler.header.progress')}</span>
-                        <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{t('filler.header.progress')}</span>
+                        <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-primary transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
                         </div>
                     </div>
@@ -443,7 +446,7 @@ export default function BriefFiller() {
                 {currentBlock ? (
                     <div key={currentBlock.id} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="space-y-4 text-center mb-12">
-                            <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                            <h2 className="text-4xl font-extrabold text-foreground tracking-tight">
                                 {currentBlock.title}
                             </h2>
                             {currentBlock.description && (
@@ -475,7 +478,7 @@ export default function BriefFiller() {
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                                 disabled={currentBlockIndex === 0}
-                                className="h-12 px-6 text-slate-500 hover:text-slate-900 rounded-xl font-semibold"
+                                className="h-12 px-6 text-muted-foreground hover:text-foreground rounded-xl font-semibold"
                             >
                                 {t('filler.filling.back')}
                             </Button>
@@ -512,7 +515,7 @@ export default function BriefFiller() {
                 )}
             </main>
 
-            <footer className="p-8 text-center text-slate-300 text-[10px] font-bold uppercase tracking-widest mt-auto">
+            <footer className="p-8 text-center text-muted-foreground/40 text-[10px] font-bold uppercase tracking-widest mt-auto">
                 {templateInfo?.name || 'BriefAI'} • © 2024 • {t('filler.footer.exclusive')}
             </footer>
         </div>

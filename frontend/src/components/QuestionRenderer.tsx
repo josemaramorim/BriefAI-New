@@ -4,7 +4,8 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import { cn } from '@/lib/utils';
+import api, { resolveImageUrl } from '../lib/api';
+import { cn } from '../lib/utils';
 import { X } from 'lucide-react';
 
 interface Question {
@@ -14,6 +15,13 @@ interface Question {
     required: boolean;
     placeholder?: string;
     options?: string[] | any; // Json from prisma
+    imageOptions?: {
+        url: string;
+        label?: string;
+    }[];
+    imageChoiceConfig?: {
+        multiple: boolean;
+    };
 }
 
 interface QuestionRendererProps {
@@ -26,19 +34,10 @@ interface QuestionRendererProps {
 export default function QuestionRenderer({ question, value, onChange, disabled }: QuestionRendererProps) {
     const options = Array.isArray(question.options) ? question.options : [];
 
-    // Helper to resolve image URLs (handles relative paths from backend)
-    const resolveImageUrl = (url: string) => {
-        if (!url) return '';
-        if (url.startsWith('http')) return url;
-        // Prefix with API base URL if relative
-        const baseURL = 'http://localhost:3001'; // Should match api.ts
-        return `${baseURL}${url.startsWith('/') ? '' : '/'}${url}`;
-    };
-
     const renderInput = () => {
         // Debug log for each question render
         if (value !== undefined) {
-            console.log(`Rendering question ${question.id} (${question.text}) with value:`, value);
+            console.log(`Rendering question ${question.id} (${question.text}) with value: `, value);
         }
 
         const safeValue = value !== undefined && value !== null ? value : '';
@@ -51,7 +50,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={question.placeholder}
                         disabled={disabled}
-                        className="min-h-[120px] text-base bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
+                        className="min-h-[120px] text-base bg-background border-input focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                     />
                 );
             case 'number':
@@ -62,7 +61,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={question.placeholder}
                         disabled={disabled}
-                        className="h-12 text-lg bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
+                        className="h-12 text-lg bg-background border-input focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                     />
                 );
             case 'select':
@@ -72,7 +71,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                         onValueChange={onChange}
                         disabled={disabled}
                     >
-                        <SelectTrigger className="h-12 text-lg bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all rounded-xl">
+                        <SelectTrigger className="h-12 text-lg bg-background border-input focus:border-primary focus:ring-primary/20 transition-all rounded-xl">
                             <SelectValue placeholder={question.placeholder || "Selecione uma opção"} />
                         </SelectTrigger>
                         <SelectContent>
@@ -92,8 +91,8 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                             <div
                                 key={i}
                                 className={cn(
-                                    "flex items-center space-x-3 p-4 border rounded-xl transition-all cursor-pointer hover:bg-slate-50",
-                                    selectedMulti.includes(option) ? 'border-primary bg-primary/5' : 'border-slate-200'
+                                    "flex items-center space-x-3 p-4 border rounded-xl transition-all cursor-pointer hover:bg-accent",
+                                    selectedMulti.includes(option) ? 'border-primary bg-primary/5' : 'border-input'
                                 )}
                                 onClick={() => {
                                     if (disabled) return;
@@ -107,52 +106,61 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                                     checked={selectedMulti.includes(option)}
                                     className="h-5 w-5 rounded-md"
                                 />
-                                <span className="text-slate-700 font-medium">{option}</span>
+                                <span className="text-foreground font-medium">{option}</span>
                             </div>
                         ))}
                     </div>
                 );
             case 'image_choice':
-                const imageOptions = Array.isArray(question.options) ? question.options : [];
-                const selectedImage = Array.isArray(value) ? value : [];
+                const imageOptions = Array.isArray(question.imageOptions) ? question.imageOptions : [];
+                // Handle both single string values and arrays of strings
+                const selectedImage = Array.isArray(value) ? value : (value ? [value] : []);
                 const multiple = question.imageChoiceConfig?.multiple;
 
                 return (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {imageOptions.map((imgOpt: any, i: number) => (
-                            <div
-                                key={i}
-                                className={cn(
-                                    "relative border rounded-lg overflow-hidden cursor-pointer",
-                                    "hover:shadow-lg transition-shadow duration-200",
-                                    selectedImage.includes(imgOpt.url) ? 'border-primary ring-2 ring-primary' : 'border-gray-200'
-                                )}
-                                onClick={() => {
-                                    if (disabled) return;
-                                    let nextSelection;
-                                    if (multiple) {
-                                        nextSelection = selectedImage.includes(imgOpt.url)
-                                            ? selectedImage.filter((url: string) => url !== imgOpt.url)
-                                            : [...selectedImage, imgOpt.url];
-                                    } else {
-                                        nextSelection = selectedImage.includes(imgOpt.url) ? [] : [imgOpt.url];
-                                    }
-                                    onChange(nextSelection);
-                                }}
-                            >
-                                <img src={resolveImageUrl(imgOpt.url)} alt={imgOpt.label || 'Image option'} className="w-full h-32 object-cover" />
-                                {imgOpt.label && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
-                                        {imgOpt.label}
-                                    </div>
-                                )}
-                                {selectedImage.includes(imgOpt.url) && (
-                                    <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                                        <X className="h-4 w-4 text-white" />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                        {imageOptions.map((imgOpt: any, i: number) => {
+                            const isSelected = selectedImage.includes(imgOpt.url);
+                            return (
+                                <div
+                                    key={i}
+                                    className={cn(
+                                        "relative border rounded-lg overflow-hidden cursor-pointer",
+                                        "hover:shadow-lg transition-shadow duration-200",
+                                        isSelected ? 'border-primary ring-2 ring-primary' : 'border-input'
+                                    )}
+                                    onClick={() => {
+                                        if (disabled) return;
+                                        let nextSelection;
+                                        if (multiple) {
+                                            nextSelection = isSelected
+                                                ? selectedImage.filter((url: string) => url !== imgOpt.url)
+                                                : [...selectedImage, imgOpt.url];
+                                        } else {
+                                            nextSelection = isSelected ? [] : [imgOpt.url];
+                                            // For single choice, we can keep it as a string instead of array if desired, 
+                                            // but keeping as array for consistency with Rule Engine is safer.
+                                            // However, the user asked "is it a string?", so let's support saving as string for single choice.
+                                            if (nextSelection.length === 1) nextSelection = nextSelection[0];
+                                            else if (nextSelection.length === 0) nextSelection = '';
+                                        }
+                                        onChange(nextSelection);
+                                    }}
+                                >
+                                    <img src={resolveImageUrl(imgOpt.url)} alt={imgOpt.label || 'Image option'} className="w-full h-32 object-cover" />
+                                    {imgOpt.label && (
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
+                                            {imgOpt.label}
+                                        </div>
+                                    )}
+                                    {isSelected && (
+                                        <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                                            <X className="h-4 w-4 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 );
             default: // text
@@ -163,7 +171,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={question.placeholder}
                         disabled={disabled}
-                        className="h-12 text-lg bg-white border-slate-200 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
+                        className="h-12 text-lg bg-background border-input focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                     />
                 );
         }
@@ -172,7 +180,7 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div className="space-y-1.5">
-                <Label className="text-xl font-semibold text-slate-800 flex items-start gap-2">
+                <Label className="text-xl font-semibold text-foreground flex items-start gap-2">
                     {question.text}
                     {question.required && <span className="text-rose-500 text-sm">*</span>}
                 </Label>
