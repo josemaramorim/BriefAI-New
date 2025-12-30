@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import QuestionEditor from './QuestionEditor';
 import { Button, Input } from './ui';
@@ -35,14 +36,26 @@ interface BlockEditorProps {
 export default function BlockEditor({ block, index, onUpdate, onRemove, disabled }: BlockEditorProps) {
     const { t } = useTranslation();
 
+    // Função utilitária para gerar key única para pergunta
+    const generateUniqueQuestionKey = (base: string) => {
+        let candidate = base;
+        let i = 1;
+        const existingKeys = new Set((block.questions || []).map(q => q.key));
+        while (existingKeys.has(candidate)) {
+            candidate = `${base}-${i++}`;
+        }
+        return candidate;
+    };
+
     const addQuestion = () => {
+        const baseKey = `qst_${Math.random().toString(36).substr(2, 9)}`;
         onUpdate({
             ...block,
             questions: [
                 ...block.questions,
                 {
                     text: '',
-                    key: `qst_${Math.random().toString(36).substr(2, 9)}`,
+                    key: generateUniqueQuestionKey(baseKey),
                     type: 'text',
                     required: false,
                 },
@@ -50,8 +63,15 @@ export default function BlockEditor({ block, index, onUpdate, onRemove, disabled
         });
     };
 
+    // Garante unicidade da key ao editar pergunta
     const updateQuestion = (qIndex: number, updatedQuestion: Question) => {
         const newQuestions = [...block.questions];
+        if (updatedQuestion.key) {
+            const keyCount = newQuestions.filter((q, i) => q.key === updatedQuestion.key && i !== qIndex).length;
+            if (keyCount > 0) {
+                updatedQuestion.key = generateUniqueQuestionKey(updatedQuestion.key);
+            }
+        }
         newQuestions[qIndex] = updatedQuestion;
         onUpdate({ ...block, questions: newQuestions });
     };

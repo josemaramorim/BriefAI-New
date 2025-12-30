@@ -166,12 +166,24 @@ const TemplateBuilder: React.FC = () => {
         }
     }
 
+    // Função utilitária para gerar key única para bloco
+    const generateUniqueBlockKey = (base: string) => {
+        let candidate = base;
+        let i = 1;
+        const existingKeys = new Set(blocks.map(b => b.key));
+        while (existingKeys.has(candidate)) {
+            candidate = `${base}-${i++}`;
+        }
+        return candidate;
+    };
+
     const addBlock = () => {
+        const baseKey = `blk_${Math.random().toString(36).substr(2, 9)}`;
         setBlocks([
             ...blocks,
             {
                 id: crypto.randomUUID(),
-                key: `blk_${Math.random().toString(36).substr(2, 9)}`,
+                key: generateUniqueBlockKey(baseKey),
                 title: `${t('block.title')} ${blocks.length + 1}`,
                 order: blocks.length,
                 questions: [],
@@ -179,10 +191,19 @@ const TemplateBuilder: React.FC = () => {
         ])
     }
 
+    // Garante unicidade da key ao editar bloco
     const updateBlock = (index: number, updatedBlock: Block) => {
-        const newBlocks = [...blocks]
-        newBlocks[index] = updatedBlock
-        setBlocks(newBlocks)
+        const newBlocks = [...blocks];
+        // Se a key foi alterada, garantir que não haja duplicidade
+        if (updatedBlock.key) {
+            const keyCount = newBlocks.filter((b, i) => b.key === updatedBlock.key && i !== index).length;
+            if (keyCount > 0) {
+                // Se duplicada, gera uma nova key única
+                updatedBlock.key = generateUniqueBlockKey(updatedBlock.key);
+            }
+        }
+        newBlocks[index] = updatedBlock;
+        setBlocks(newBlocks);
     }
 
     const removeBlock = (index: number) => {
