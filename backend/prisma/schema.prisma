@@ -84,12 +84,18 @@ model Question {
   // Human-editable key used for rule references and imports. Generated from text when missing.
   key       String? 
   text      String
-  type      String   @default("text") // text, textarea, number, select, multiselect, image_choice
+  // Supported types: text, textarea, number, select, multiselect, image_choice, color
+  // 'color' type uses `colorOptions` (optional) to store palette entries.
+  type      String   @default("text")
   required  Boolean  @default(false)
   placeholder String?  // Texto de ajuda no campo
   options   Json?    // for select/multiselect types
   imageOptions Json? // [{ url: string, label?: string }] // Links das imagens para opções de escolha
   imageChoiceConfig Json? // { multiple: boolean } // Define se a seleção é única ou múltipla
+  // Colors: list of palette entries, e.g. [{ key: 'c-ivory', hex:'#FFFFF0', name:'Ivory' }]
+  colorOptions Json?
+  // colorConfig example: { multiple: true }
+  colorConfig Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

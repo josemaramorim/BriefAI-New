@@ -592,8 +592,10 @@ app.post('/templates', authMiddleware, requireRole('Admin', 'Editor'), async (re
                 type: q.type,
                 required: q.required,
                 placeholder: q.placeholder,
-                options: q.options,
-                imageOptions: q.imageOptions
+                    options: q.options,
+                    imageOptions: q.imageOptions,
+                    colorOptions: q.colorOptions,
+                    colorConfig: q.colorConfig
               }))
             }
           }))
@@ -715,7 +717,9 @@ app.put('/templates/:id', authMiddleware, requireRole('Admin', 'Editor'), async 
                 required: q.required,
                 placeholder: q.placeholder,
                 options: q.options,
-                imageOptions: q.imageOptions
+                imageOptions: q.imageOptions,
+                colorOptions: q.colorOptions,
+                colorConfig: q.colorConfig
               }))
             }
           }))
