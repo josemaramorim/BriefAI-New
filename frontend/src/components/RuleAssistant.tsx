@@ -47,7 +47,7 @@ export default function RuleAssistant({ open, onOpenChange, availableKeys, onIns
   const handleInsert = () => {
     if (!selectedKey) return;
     const payload = {
-      questionId: selectedKey,
+      questionId: selectedKey, // sempre key
       operator,
       value,
     };

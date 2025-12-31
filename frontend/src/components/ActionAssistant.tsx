@@ -105,7 +105,7 @@ export default function ActionAssistant({ open, onOpenChange, availableBlocks = 
                                     </SelectTrigger>
                                     <SelectContent>
                                         {availableBlocks.map(block => (
-                                            <SelectItem key={block.id} value={block.key || block.id}>{block.title || block.id}</SelectItem>
+                                            block.key ? <SelectItem key={block.key} value={block.key}>{block.title || block.key}</SelectItem> : null
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -119,7 +119,7 @@ export default function ActionAssistant({ open, onOpenChange, availableBlocks = 
                                     </SelectTrigger>
                                     <SelectContent>
                                         {availableQuestions.map(q => (
-                                            <SelectItem key={q.key} value={q.key}>{q.text || q.key}</SelectItem>
+                                            q.key ? <SelectItem key={q.key} value={q.key}>{q.text || q.key}</SelectItem> : null
                                         ))}
                                     </SelectContent>
                                 </Select>

@@ -71,23 +71,9 @@ export default function RuleEditor({ rule, index, onUpdate, onRemove, disabled, 
         });
     };
 
+    // Sempre insere apenas a key (sem fallback para ID)
     const formatAndInsert = (key: string) => {
-        const el = exprRef.current;
-        const v = el?.value ?? '';
-        if (!el) return insertAtCursor(`\"questionId\":\"${key}\"`);
-        // detect if caret/token is inside a quoted string
-        const start = tokenRange ? tokenRange.start : (el.selectionStart ?? v.length);
-        const end = tokenRange ? tokenRange.end : (el.selectionEnd ?? v.length);
-        const lq = v.lastIndexOf('"', Math.max(0, start - 1));
-        const rq = v.indexOf('"', end);
-        const insideQuotes = lq !== -1 && rq !== -1 && lq < start && rq >= end;
-        if (insideQuotes) {
-            // insert only key (assumes we're inside value quotes)
-            insertAtCursor(key);
-        } else {
-            // default: insert full JSON pair
-            insertAtCursor(`\"questionId\":\"${key}\"`);
-        }
+        insertAtCursor(key);
     };
 
     const detectTokenAtCaret = () => {

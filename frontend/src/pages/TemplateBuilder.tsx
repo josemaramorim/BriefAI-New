@@ -62,30 +62,27 @@ const TemplateBuilder: React.FC = () => {
 
     // Memoize available keys for rules (blocks and questions)
     const availableTargetKeys = React.useMemo(() => {
-        const targets: { label: string; value: string; type: 'block' | 'question' }[] = []
+        const targets: { label: string; value: string; type: 'block' | 'question' }[] = [];
         blocks.forEach((b) => {
-            // Priority: Key > ID
-            const bVal = b.key || b.id
-            if (bVal) {
+            if (b.key) {
                 targets.push({
                     label: b.title || `Bloco ${b.order + 1}`,
-                    value: bVal,
-                    type: 'block'
-                })
+                    value: b.key,
+                    type: 'block',
+                });
             }
             b.questions.forEach((q, qIdx) => {
-                const qVal = q.key || q.id
-                if (qVal) {
+                if (q.key) {
                     targets.push({
                         label: q.text || `Pergunta ${qIdx + 1}`,
-                        value: qVal,
-                        type: 'question'
-                    })
+                        value: q.key,
+                        type: 'question',
+                    });
                 }
-            })
-        })
-        return targets
-    }, [blocks])
+            });
+        });
+        return targets;
+    }, [blocks]);
 
     useEffect(() => {
         const load = async () => {
