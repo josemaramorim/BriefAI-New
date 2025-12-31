@@ -108,28 +108,68 @@ const TemplateBuilder: React.FC = () => {
         load()
     }, [id])
 
+    // Validação de regras antes de salvar
+    const validateRules = () => {
+        const blockKeys = new Set(blocks.map(b => b.key));
+        const questionKeys = new Set(blocks.flatMap(b => b.questions.map(q => q.key)));
+        const errors: string[] = [];
+        rules.forEach((rule, idx) => {
+            // Validar expression
+            try {
+                const expr = JSON.parse(rule.expression || '{}');
+                if (expr && expr.questionId && !questionKeys.has(expr.questionId)) {
+                    errors.push(`Regra ${idx + 1}: pergunta referenciada não existe (key: "${expr.questionId}")`);
+                }
+            } catch (e) {
+                errors.push(`Regra ${idx + 1}: expressão inválida (JSON)`);
+            }
+            // Validar action
+            try {
+                const action = JSON.parse(rule.action || '{}');
+                if (action && action.targetId) {
+                    // Pode ser bloco ou pergunta
+                    if (!blockKeys.has(action.targetId) && !questionKeys.has(action.targetId)) {
+                        errors.push(`Regra ${idx + 1}: targetId não encontrado (key: "${action.targetId}")`);
+                    }
+                }
+                if (action && action.questionId && !questionKeys.has(action.questionId)) {
+                    errors.push(`Regra ${idx + 1}: pergunta de ação não existe (key: "${action.questionId}")`);
+                }
+            } catch (e) {
+                errors.push(`Regra ${idx + 1}: action inválida (JSON)`);
+            }
+        });
+        return errors;
+    };
+
     const handleSave = async () => {
-        setSaving(true)
+        const validationErrors = validateRules();
+        if (validationErrors.length > 0) {
+            setSaveWarnings(validationErrors);
+            setShowWarningDialog(true);
+            return;
+        }
+        setSaving(true);
         try {
-            const payload = { name, description, allowDraftResponses, blocks, rules }
+            const payload = { name, description, allowDraftResponses, blocks, rules };
             if (!id || id === 'new') {
-                const res = await api.post('/templates', payload)
-                navigate(`/templates/${res.data.templateId}`)
+                const res = await api.post('/templates', payload);
+                navigate(`/templates/${res.data.templateId}`);
             } else {
-                const res = await api.put(`/templates/${id}`, payload)
+                const res = await api.put(`/templates/${id}`, payload);
                 if (res.data.warnings && res.data.warnings.length > 0) {
-                    setSaveWarnings(res.data.warnings)
-                    setShowWarningDialog(true)
+                    setSaveWarnings(res.data.warnings);
+                    setShowWarningDialog(true);
                 }
             }
-            toast({ title: t('templateBuilder.saveSuccess') })
+            toast({ title: t('templateBuilder.saveSuccess') });
         } catch (err) {
-            console.error(err)
-            toast({ title: t('templateBuilder.saveError') })
+            console.error(err);
+            toast({ title: t('templateBuilder.saveError') });
         } finally {
-            setSaving(false)
+            setSaving(false);
         }
-    }
+    };
 
     const handlePublish = async () => {
         setSaving(true)
