@@ -1,7 +1,8 @@
-import React from 'react';
+import * as React from "react";
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../lib/api';
+import ColorChip from '../components/ui/ColorChip';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -32,6 +33,7 @@ export default function BriefingResults() {
     const { id: templateId } = useParams();
     const [instances, setInstances] = useState<BriefInstance[]>([]);
     const [template, setTemplate] = useState<TemplateInfo | null>(null);
+    const [previews, setPreviews] = useState<Record<string, { colors: Array<{ hex?: string; label?: string }> }>>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -48,6 +50,45 @@ export default function BriefingResults() {
             ]);
             setInstances(instancesRes.data);
             setTemplate(templateRes.data);
+
+            // fetch full template structure for color previews
+            try {
+                const fullRes = await api.get(`/templates/${templateId}/full`);
+                const structure = fullRes.data as any;
+
+                // fetch each instance details to extract color responses
+                const previewsMap: Record<string, { colors: Array<{ hex?: string; label?: string }> }> = {};
+                await Promise.all(instancesRes.data.map(async (inst: any) => {
+                    try {
+                        const instRes = await api.get(`/brief-instances/${inst.id}`);
+                        const instance = instRes.data;
+                        const colors: Array<{ hex?: string; label?: string }> = [];
+
+                        const blocks = structure.blocks || [];
+                        const allQuestions: any[] = blocks.flatMap((b: any) => b.questions || []);
+
+                        allQuestions.filter(q => q.type === 'color').forEach(q => {
+                            const resp = (instance.responses || []).find((r: any) => r.questionId === q.id);
+                            if (!resp || resp.value == null) return;
+                            const selections = Array.isArray(resp.value) ? resp.value : [resp.value];
+                            selections.forEach((sel: any) => {
+                                let opt = (q.colorOptions || []).find((o: any) => o.id === sel || o.hex === sel || o.value === sel || (o.hex || '').toLowerCase() === String(sel).toLowerCase());
+                                const hex = opt?.hex || (typeof sel === 'string' && /^#/.test(sel) ? sel : undefined);
+                                const label = opt?.label || opt?.name || (typeof sel === 'string' && !hex ? sel : undefined);
+                                colors.push({ hex, label });
+                            });
+                        });
+
+                        previewsMap[inst.id] = { colors: colors.slice(0, 6) };
+                    } catch (e) {
+                        // ignore per-instance failures
+                    }
+                }));
+
+                setPreviews(previewsMap);
+            } catch (e) {
+                // ignore if full template fetch fails
+            }
         } catch (error) {
             console.error('Error loading results:', error);
         } finally {
@@ -125,6 +166,15 @@ export default function BriefingResults() {
                                                         {new Date(instance.updatedAt).toLocaleDateString()}
                                                     </span>
                                                 </div>
+                                                {previews[instance.id]?.colors?.length ? (
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {previews[instance.id].colors.map((c, i) => (
+                                                            <div key={i} className="inline-flex items-center">
+                                                                <ColorChip hex={c.hex} label={undefined} size={14} className="!gap-1" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : null}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-4 sm:pt-0">

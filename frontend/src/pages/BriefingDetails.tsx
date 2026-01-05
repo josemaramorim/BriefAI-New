@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import * as React from "react";
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { resolveImageUrl } from '../lib/api';
+import ColorChip from '../components/ui/ColorChip';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -12,6 +14,8 @@ interface Question {
     id: string;
     text: string;
     type: string;
+    colorOptions?: any[];
+    colorConfig?: any;
 }
 
 interface Block {
@@ -75,7 +79,7 @@ export default function BriefingDetails() {
         }
     };
 
-    const renderValue = (value: any, type: string) => {
+    const renderValue = (value: any, type: string, question?: Question) => {
         if (value === null || value === undefined || value === '') return <span className="text-muted-foreground italic">Não respondido</span>;
 
         if (type === 'multiselect' && Array.isArray(value)) {
@@ -84,6 +88,30 @@ export default function BriefingDetails() {
                     {value.map((v, i) => (
                         <Badge key={i} variant="outline" className="bg-slate-50">{v}</Badge>
                     ))}
+                </div>
+            );
+        }
+
+        if (type === 'color') {
+            const selections = Array.isArray(value) ? value : [value];
+            const opts = Array.isArray(question?.colorOptions) ? question!.colorOptions : [];
+
+            return (
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {selections.map((sel: any, idx: number) => {
+                        // try to match option by id or hex/value, otherwise treat sel as hex or label
+                        let opt: any = undefined;
+                        if (opts.length) {
+                            opt = opts.find(o => o.id === sel || o.hex === sel || o.value === sel || o.hex?.toLowerCase() === String(sel).toLowerCase());
+                        }
+
+                        const hex = opt?.hex || (typeof sel === 'string' && /^#/.test(sel) ? sel : undefined);
+                        const label = opt?.label || opt?.name || (typeof sel === 'string' && !hex ? sel : undefined);
+
+                        return (
+                            <ColorChip key={idx} hex={hex} label={label} />
+                        );
+                    })}
                 </div>
             );
         }
@@ -177,7 +205,7 @@ export default function BriefingDetails() {
                                                 {question.text}
                                             </p>
                                             <div className="text-lg">
-                                                {renderValue(response?.value, question.type)}
+                                                {renderValue(response?.value, question.type, question)}
                                             </div>
                                         </div>
                                     );

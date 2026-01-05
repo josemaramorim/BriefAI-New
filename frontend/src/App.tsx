@@ -1,5 +1,7 @@
 import React from 'react';
+// automatic JSX runtime handles React imports
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Templates from './pages/Templates';
@@ -11,7 +13,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { Toaster } from './components/ui/toaster';
 import { ThemeProvider } from './components/theme-provider';
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 }

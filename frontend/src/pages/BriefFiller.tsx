@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from "react";
+import { useState, useEffect, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../components/ui/button';
@@ -279,7 +280,7 @@ export default function BriefFiller() {
         setVisibleQuestionIds(activeQuestionIdentifiers);
     };
 
-    const handleStart = async (e: React.FormEvent) => {
+    const handleStart = async (e: FormEvent) => {
         e.preventDefault();
         if (!name || !email) {
             toast({

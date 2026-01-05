@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from "react"
+import { useState, useEffect, useMemo } from 'react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +40,7 @@ interface Rule {
     action: string
 }
 
-const TemplateBuilder: React.FC = () => {
+const TemplateBuilder = () => {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { id } = useParams()
@@ -61,7 +62,7 @@ const TemplateBuilder: React.FC = () => {
     const [rules, setRules] = useState<Rule[]>([])
 
     // Memoize available keys for rules (blocks and questions)
-    const availableTargetKeys = React.useMemo(() => {
+    const availableTargetKeys = useMemo(() => {
         const targets: { label: string; value: string; type: 'block' | 'question' }[] = [];
         blocks.forEach((b) => {
             if (b.key) {

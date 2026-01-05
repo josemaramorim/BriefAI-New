@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from "react"
 import { useTranslation } from 'react-i18next';
 import AssistantBase from './AssistantBase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';

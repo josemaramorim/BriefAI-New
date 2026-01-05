@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from "react"
+import { useState } from 'react';
 import { useToast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { Button, Input, Checkbox, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui';
@@ -22,6 +23,8 @@ interface Question {
     imageChoiceConfig?: {
         multiple?: boolean;
     };
+    colorOptions?: { hex: string; name?: string; key?: string }[];
+    colorConfig?: { multiple?: boolean };
 }
 
 interface QuestionEditorProps {
@@ -96,6 +99,7 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
         { value: 'select', label: t('question.types.select') },
         { value: 'multiselect', label: t('question.types.multiselect') },
         { value: 'image_choice', label: t('question.types.image_choice', 'Escolha de Imagem') },
+        { value: 'color', label: t('question.types.color', 'Seleção de Cor') },
     ];
 
     return (
@@ -381,6 +385,80 @@ export default function QuestionEditor({ question, index, onUpdate, onRemove, di
                                 >
                                     <Plus className="mr-2 h-3 w-3" />
                                     {t('question.addImageOption', 'Adicionar Opção de Imagem')}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {question.type === 'color' && (
+                        <div className="space-y-2 pt-2 border-t mt-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                                {t('question.colorOptions', 'Paleta de Cores')}
+                            </Label>
+                            <div className="flex items-center gap-4 mb-2">
+                                <Checkbox
+                                    id={`color-multiple-${index}`}
+                                    checked={!!question.colorConfig?.multiple}
+                                    onCheckedChange={(checked) => onUpdate({ ...question, colorConfig: { ...question.colorConfig, multiple: !!checked } })}
+                                    disabled={disabled}
+                                />
+                                <Label htmlFor={`color-multiple-${index}`} className="text-sm cursor-pointer">
+                                    {t('question.colorMultiple', 'Permitir seleção múltipla')}
+                                </Label>
+                            </div>
+
+                            <div className="space-y-2">
+                                {(question.colorOptions || []).map((c, cIdx) => (
+                                    <div key={cIdx} className="flex gap-2 items-center">
+                                        <input
+                                            type="color"
+                                            value={c.hex || '#ffffff'}
+                                            onChange={(e) => {
+                                                const newOptions = [...(question.colorOptions || [])];
+                                                newOptions[cIdx] = { ...newOptions[cIdx], hex: e.target.value };
+                                                onUpdate({ ...question, colorOptions: newOptions });
+                                            }}
+                                            disabled={disabled}
+                                            className="h-8 w-12 p-0 border rounded"
+                                        />
+                                        <Input
+                                            value={c.name || ''}
+                                            onChange={(e) => {
+                                                const newOptions = [...(question.colorOptions || [])];
+                                                newOptions[cIdx] = { ...newOptions[cIdx], name: e.target.value };
+                                                onUpdate({ ...question, colorOptions: newOptions });
+                                            }}
+                                            placeholder={t('question.colorNamePlaceholder', 'Nome (opcional)')}
+                                            className="h-8 text-sm flex-1"
+                                            disabled={disabled}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                const newOptions = (question.colorOptions || []).filter((_, i) => i !== cIdx);
+                                                onUpdate({ ...question, colorOptions: newOptions });
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newOptions = [...(question.colorOptions || []), { hex: '#ffffff', name: '' }];
+                                        onUpdate({ ...question, colorOptions: newOptions });
+                                    }}
+                                    className="h-8 border-dashed"
+                                    disabled={disabled}
+                                >
+                                    <Plus className="mr-2 h-3 w-3" />
+                                    {t('question.addColorOption', 'Adicionar Cor')}
                                 </Button>
                             </div>
                         </div>

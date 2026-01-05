@@ -1,5 +1,6 @@
-import React from 'react';
+import * as React from "react"
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 const languages = [
     { code: 'pt-BR', name: 'Português', flag: '🇧🇷' },
@@ -9,7 +10,7 @@ const languages = [
 
 export default function LanguageSelector() {
     const { i18n } = useTranslation();
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
 

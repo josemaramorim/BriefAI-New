@@ -1,12 +1,14 @@
-import React from 'react';
+import * as React from "react";
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import api, { resolveImageUrl } from '../lib/api';
+import { resolveImageUrl } from '../lib/api';
 import { cn } from '../lib/utils';
 import { X } from 'lucide-react';
+import ColorChip from './ui/ColorChip';
+import { ColorPicker } from './ui/ColorPicker';
 
 interface Question {
     id: string;
@@ -43,6 +45,65 @@ export default function QuestionRenderer({ question, value, onChange, disabled }
         const safeValue = value !== undefined && value !== null ? value : '';
 
         switch (question.type) {
+            case 'color':
+            case 'cor': {
+                // Suporte a seleção única ou múltipla
+                const palette = Array.isArray(question.options) ? question.options : [
+                    '#FFFFFF', '#000000', '#F44336', '#E91E63', '#9C27B0', '#3F51B5', '#2196F3', '#4CAF50', '#FFEB3B', '#FF9800', '#795548', '#607D8B'
+                ];
+                const multiple = question.imageChoiceConfig?.multiple || question.multiple;
+                const selectedColors = multiple ? (Array.isArray(value) ? value : []) : value ? [value] : [];
+
+                const handleSelect = (color: string) => {
+                    if (disabled) return;
+                    if (multiple) {
+                        const next = selectedColors.includes(color)
+                            ? selectedColors.filter((c: string) => c !== color)
+                            : [...selectedColors, color];
+                        onChange(next);
+                    } else {
+                        onChange(color);
+                    }
+                };
+
+                return (
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                            {palette.map((color: string, i: number) => (
+                                <button
+                                    key={color + i}
+                                    type="button"
+                                    className={cn(
+                                        'p-0.5 rounded border-2',
+                                        selectedColors.includes(color) ? 'border-primary ring-2 ring-primary' : 'border-transparent'
+                                    )}
+                                    style={{ background: 'none' }}
+                                    onClick={() => handleSelect(color)}
+                                    disabled={disabled}
+                                    aria-label={`Selecionar cor ${color}`}
+                                >
+                                    <ColorChip hex={color} size={28} />
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                            <ColorPicker
+                                value={selectedColors[selectedColors.length - 1] || ''}
+                                onChange={handleSelect}
+                                disabled={disabled}
+                            />
+                            <span className="text-sm text-muted-foreground">Escolher cor personalizada</span>
+                        </div>
+                        {multiple && selectedColors.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {selectedColors.map((color: string, i: number) => (
+                                    <ColorChip key={color + i} hex={color} size={20} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
             case 'textarea':
                 return (
                     <Textarea

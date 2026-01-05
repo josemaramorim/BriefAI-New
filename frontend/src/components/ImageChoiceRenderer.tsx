@@ -1,4 +1,4 @@
-import React from 'react';
+// automatic JSX runtime handles React imports
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 

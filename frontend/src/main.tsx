@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Temporary: re-add default React import to prevent ReferenceError while runtime config is verified
 import App from './App';
 import './i18n';
 import { ThemeProvider } from './components/theme-provider';

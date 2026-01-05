@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import * as React from "react";
+import { useCallback, type FC } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -36,8 +37,8 @@ const initialEdges: Edge[] = [
   { id: 'e1-3', source: '1', target: '3' },
 ];
 
-const WorkflowEditorPage: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+const WorkflowEditorPage: FC = () => {
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onConnect = useCallback((params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);

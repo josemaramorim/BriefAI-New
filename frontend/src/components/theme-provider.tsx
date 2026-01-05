@@ -1,10 +1,10 @@
-import React from 'react';
-import { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
+import type { ReactNode } from 'react'
 
 type Theme = "dark" | "light" | "system"
 
 type ThemeProviderProps = {
-    children: React.ReactNode
+    children: ReactNode
     defaultTheme?: Theme
     storageKey?: string
 }
